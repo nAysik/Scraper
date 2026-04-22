@@ -3,7 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { searchChannelsByKeyword } from '@/lib/scraper/channels';
 import { getChannelRecentVideos } from '@/lib/scraper/videos';
 import { calcOutlierScore } from '@/lib/pipeline/outlier';
-import { upsertChannel, upsertVideo } from '@/lib/pipeline/upsert';
+import { upsertChannel, upsertVideo, getNicheIdMap } from '@/lib/pipeline/upsert';
+import { categorizeByKeywords } from '@/lib/pipeline/keyword-categorize';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -21,7 +22,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const channels = await searchChannelsByKeyword(keyword, 10);
+    const [channels, nicheMap] = await Promise.all([
+      searchChannelsByKeyword(keyword, 10),
+      getNicheIdMap(),
+    ]);
 
     let channelsScraped = 0;
     let videosUpserted = 0;
@@ -32,7 +36,9 @@ export async function POST(request: NextRequest) {
       channelsScraped++;
       for (const video of videos) {
         const score = calcOutlierScore(video.viewCount, subscriberCount);
-        await upsertVideo({ ...video, channelId, outlierScore: score });
+        const nicheName = categorizeByKeywords(video.title);
+        const nicheId = nicheMap[nicheName];
+        await upsertVideo({ ...video, channelId, outlierScore: score, nicheId });
         videosUpserted++;
       }
     }

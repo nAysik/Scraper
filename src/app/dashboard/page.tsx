@@ -16,8 +16,7 @@ export default async function DashboardPage() {
       .from('videos')
       .select(`
         id, youtube_id, title, view_count, published_at, outlier_score,
-        channels ( name, subscriber_count ),
-        niches ( name )
+        channels ( name, subscriber_count, niches ( name ) )
       `)
       .order('outlier_score', { ascending: false })
       .limit(500),
@@ -32,7 +31,7 @@ export default async function DashboardPage() {
     subscriberCount: v.channels?.subscriber_count ?? 0,
     viewCount:       v.view_count,
     outlierScore:    Number(v.outlier_score),
-    niche:           v.niches?.name ?? null,
+    niche:           (v.channels as any)?.niches?.name ?? null,
     publishedAt:     v.published_at,
   }));
 
