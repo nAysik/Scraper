@@ -22,7 +22,7 @@ Copy `.env.local` and fill in all five keys before running anything:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (safe in browser) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key — server-only, bypasses RLS |
-| `OPENAI_API_KEY` | GPT-4o-mini for niche categorization |
+| `PERPLEXITY_API_KEY` | Perplexity `sonar` model for niche categorization |
 | `CRON_SECRET` | Bearer token protecting `GET /api/cron/scrape` |
 | `PROXY_URL` | Optional residential proxy for InnerTube requests |
 

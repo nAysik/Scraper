@@ -26,7 +26,10 @@ export interface CategorizedVideo {
 let openai: OpenAI | null = null;
 
 function getOpenAI() {
-  if (!openai) openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+  if (!openai) openai = new OpenAI({
+    apiKey: process.env.PERPLEXITY_API_KEY,
+    baseURL: 'https://api.perplexity.ai',
+  });
   return openai;
 }
 
@@ -47,7 +50,7 @@ ${titlesJson}
 Return ONLY a JSON object like: {"results": [{"id": "...", "niche": "..."}]}`;
 
   const response = await client.chat.completions.create({
-    model: 'gpt-4o-mini',
+    model: 'sonar',
     response_format: { type: 'json_object' },
     messages: [{ role: 'user', content: prompt }],
     temperature: 0,
