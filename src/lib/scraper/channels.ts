@@ -7,12 +7,16 @@ export interface ChannelMeta {
 }
 
 function parseSubscriberCount(text: string): number {
-  const cleaned = text.replace(/[^0-9.KMBkmb]/g, '').toUpperCase();
-  const num = parseFloat(cleaned);
-  if (isNaN(num)) return 0;
-  if (cleaned.endsWith('B')) return Math.round(num * 1_000_000_000);
-  if (cleaned.endsWith('M')) return Math.round(num * 1_000_000);
-  if (cleaned.endsWith('K')) return Math.round(num * 1_000);
+  const match = text.match(/([\d.]+)\s*([KMB])/i);
+  if (!match) {
+    const n = parseFloat(text.replace(/[^0-9.]/g, ''));
+    return isNaN(n) ? 0 : Math.round(n);
+  }
+  const num = parseFloat(match[1]);
+  const suffix = match[2].toUpperCase();
+  if (suffix === 'B') return Math.round(num * 1_000_000_000);
+  if (suffix === 'M') return Math.round(num * 1_000_000);
+  if (suffix === 'K') return Math.round(num * 1_000);
   return Math.round(num);
 }
 
@@ -29,7 +33,8 @@ export async function searchChannelsByKeyword(keyword: string, limit = 10): Prom
     const ch = item as any;
     const id: string = ch.id ?? ch.channel_id ?? '';
     const name: string = ch.author?.name ?? ch.long_byline?.toString() ?? '';
-    const subText: string = ch.subscriber_count?.text ?? ch.subscriber_count?.toString() ?? '0';
+    const subRaw = ch.subscriber_count;
+    const subText: string = subRaw?.toString() ?? subRaw?.text ?? subRaw?.runs?.[0]?.text ?? '0';
 
     if (!id) continue;
 

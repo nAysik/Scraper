@@ -50,8 +50,8 @@ function fmt(n: number) {
 
 export default function VideosTable({ videos, niches }: Props) {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'outlierScore', desc: true }]);
-  const [minScore, setMinScore] = useState(3);
-  const [maxSubs, setMaxSubs] = useState(10_000);
+  const [minScore, setMinScore] = useState(0);
+  const [maxSubs, setMaxSubs] = useState(50_000_000);
   const [selectedNiche, setSelectedNiche] = useState('all');
 
   const filtered = useMemo(() => {

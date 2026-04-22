@@ -26,19 +26,10 @@ export async function GET(request: NextRequest) {
     let updated = 0;
 
     for (const channel of channels) {
-      const { data: channelRow } = await sb
-        .from('channels')
-        .select('subscriber_count')
-        .eq('id', channel.id)
-        .single();
-
-      const subscriberCount: number = (channelRow?.subscriber_count as number) ?? 0;
-
-      const videos = await getChannelRecentVideos(channel.youtubeId, 30);
+      const { subscriberCount, videos } = await getChannelRecentVideos(channel.youtubeId, 30);
 
       for (const video of videos) {
         const score = calcOutlierScore(video.viewCount, subscriberCount);
-        if (score < 1) continue;
         await upsertVideo({ ...video, channelId: channel.id, outlierScore: score });
         updated++;
       }

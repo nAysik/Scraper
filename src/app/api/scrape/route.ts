@@ -27,15 +27,11 @@ export async function POST(request: NextRequest) {
     let videosUpserted = 0;
 
     for (const channel of channels) {
-      const channelId = await upsertChannel({ ...channel });
+      const { subscriberCount, videos } = await getChannelRecentVideos(channel.youtubeId, 30);
+      const channelId = await upsertChannel({ ...channel, subscriberCount });
       channelsScraped++;
-
-      const videos = await getChannelRecentVideos(channel.youtubeId, 30);
-
       for (const video of videos) {
-        const score = calcOutlierScore(video.viewCount, channel.subscriberCount);
-        if (score < 1) continue;
-
+        const score = calcOutlierScore(video.viewCount, subscriberCount);
         await upsertVideo({ ...video, channelId, outlierScore: score });
         videosUpserted++;
       }
