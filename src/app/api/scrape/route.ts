@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server';
 import { searchChannelsByKeyword } from '@/lib/scraper/channels';
 import { getChannelRecentVideos } from '@/lib/scraper/videos';
 import { calcOutlierScore } from '@/lib/pipeline/outlier';
-import { categorizeInBatches } from '@/lib/pipeline/categorize';
-import { upsertChannel, upsertVideo, getNicheIdMap } from '@/lib/pipeline/upsert';
+import { upsertChannel, upsertVideo } from '@/lib/pipeline/upsert';
 
 export async function POST(request: NextRequest) {
   const supabase = await createClient();
@@ -22,17 +21,10 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const nicheMap = await getNicheIdMap();
     const channels = await searchChannelsByKeyword(keyword, 10);
 
     let channelsScraped = 0;
     let videosUpserted = 0;
-
-    const allVideoTitles: { videoId: string; title: string }[] = [];
-    const videoBuffer: Array<{
-      youtubeId: string; title: string; viewCount: number;
-      publishedAt: Date; channelId: string; outlierScore: number;
-    }> = [];
 
     for (const channel of channels) {
       const channelId = await upsertChannel({ ...channel });
@@ -44,19 +36,9 @@ export async function POST(request: NextRequest) {
         const score = calcOutlierScore(video.viewCount, channel.subscriberCount);
         if (score < 1) continue;
 
-        allVideoTitles.push({ videoId: video.youtubeId, title: video.title });
-        videoBuffer.push({ ...video, channelId, outlierScore: score });
+        await upsertVideo({ ...video, channelId, outlierScore: score });
+        videosUpserted++;
       }
-    }
-
-    const categorized = await categorizeInBatches(allVideoTitles, 20);
-    const nicheByVideoId = Object.fromEntries(categorized.map(c => [c.videoId, c.niche]));
-
-    for (const video of videoBuffer) {
-      const nicheName = nicheByVideoId[video.youtubeId];
-      const nicheId = nicheName ? nicheMap[nicheName] : undefined;
-      await upsertVideo({ ...video, nicheId });
-      videosUpserted++;
     }
 
     return NextResponse.json({ channelsScraped, videosUpserted });

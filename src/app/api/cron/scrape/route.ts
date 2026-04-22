@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getChannelRecentVideos } from '@/lib/scraper/videos';
 import { calcOutlierScore } from '@/lib/pipeline/outlier';
-import { upsertVideo, getStaleChannels, getNicheIdMap } from '@/lib/pipeline/upsert';
+import { upsertVideo, getStaleChannels } from '@/lib/pipeline/upsert';
 import { createClient } from '@supabase/supabase-js';
 
 function getServiceClient() {
@@ -21,7 +21,6 @@ export async function GET(request: NextRequest) {
 
   try {
     const sb = getServiceClient();
-    const nicheMap = await getNicheIdMap();
     const channels = await getStaleChannels(50);
 
     let updated = 0;
