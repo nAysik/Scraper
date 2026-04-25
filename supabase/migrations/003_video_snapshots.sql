@@ -6,3 +6,10 @@ CREATE TABLE video_snapshots (
 );
 
 CREATE INDEX video_snapshots_video_id_idx ON video_snapshots (video_id, recorded_at DESC);
+
+ALTER TABLE video_snapshots ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Authenticated users can read snapshots"
+  ON video_snapshots FOR SELECT
+  TO authenticated
+  USING (true);
