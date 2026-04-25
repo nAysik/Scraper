@@ -5,25 +5,8 @@ import SearchForm from '@/components/search-form';
 
 export const dynamic = 'force-dynamic';
 
-export default async function DashboardPage() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
-  if (!user) redirect('/login');
-
-  const [{ data: videosRaw }, { data: nichesRaw }] = await Promise.all([
-    supabase
-      .from('videos')
-      .select(`
-        id, youtube_id, title, view_count, published_at, outlier_score, is_short,
-        channels ( name, subscriber_count, niches ( name ) )
-      `)
-      .order('outlier_score', { ascending: false })
-      .limit(500),
-    supabase.from('niches').select('id, name').order('name'),
-  ]);
-
-  const videos: VideoRow[] = (videosRaw ?? []).map((v: any) => ({
+function mapRows(raw: any[]): VideoRow[] {
+  return raw.map((v: any) => ({
     id:              v.id,
     youtubeId:       v.youtube_id,
     title:           v.title,
@@ -35,8 +18,42 @@ export default async function DashboardPage() {
     publishedAt:     v.published_at,
     isShort:         v.is_short as boolean,
   }));
+}
 
-  const niches = (nichesRaw ?? []).map((n: any) => ({ id: n.id, name: n.name }));
+export default async function DashboardPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
+  if (!user) redirect('/login');
+
+  const select = `
+    id, youtube_id, title, view_count, published_at, outlier_score, is_short,
+    channels ( name, subscriber_count, niches ( name ) )
+  `;
+
+  const [
+    { data: nicheVideosRaw },
+    { data: shortsRaw },
+    { data: nichesRaw },
+  ] = await Promise.all([
+    supabase
+      .from('videos')
+      .select(select)
+      .eq('is_short', false)
+      .order('outlier_score', { ascending: false })
+      .limit(500),
+    supabase
+      .from('videos')
+      .select(select)
+      .eq('is_short', true)
+      .order('view_count', { ascending: false })
+      .limit(500),
+    supabase.from('niches').select('id, name').order('name'),
+  ]);
+
+  const nicheVideos = mapRows(nicheVideosRaw ?? []);
+  const shorts      = mapRows(shortsRaw ?? []);
+  const niches      = (nichesRaw ?? []).map((n: any) => ({ id: n.id, name: n.name }));
 
   return (
     <div className="min-h-screen bg-gray-950 text-white">
@@ -47,19 +64,22 @@ export default async function DashboardPage() {
         </form>
       </header>
 
-      <main className="max-w-7xl mx-auto px-6 py-8 space-y-8">
+      <main className="max-w-7xl mx-auto px-6 py-8 space-y-12">
         <section>
           <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-            Scrape a keyword
+            Keywords Scraper
           </h2>
           <SearchForm />
+          <div className="mt-6">
+            <VideosTable videos={nicheVideos} niches={niches} defaultSort="outlierScore" />
+          </div>
         </section>
 
         <section>
           <h2 className="text-sm font-medium text-gray-400 mb-3 uppercase tracking-wider">
-            Outlier videos
+            Top Viral Video Charts
           </h2>
-          <VideosTable videos={videos} niches={niches} />
+          <VideosTable videos={shorts} niches={niches} defaultSort="viewCount" />
         </section>
       </main>
     </div>

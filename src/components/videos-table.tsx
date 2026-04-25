@@ -35,6 +35,7 @@ export interface VideoRow {
 interface Props {
   videos: VideoRow[];
   niches: { id: string; name: string }[];
+  defaultSort?: 'outlierScore' | 'viewCount';
 }
 
 function ScoreBadge({ score }: { score: number }) {
@@ -49,22 +50,20 @@ function fmt(n: number) {
   return n.toString();
 }
 
-export default function VideosTable({ videos, niches }: Props) {
-  const [sorting, setSorting] = useState<SortingState>([{ id: 'outlierScore', desc: true }]);
+export default function VideosTable({ videos, niches, defaultSort = 'outlierScore' }: Props) {
+  const [sorting, setSorting] = useState<SortingState>([{ id: defaultSort, desc: true }]);
   const [minScore, setMinScore] = useState(0);
   const [maxSubs, setMaxSubs] = useState(50_000_000);
   const [selectedNiche, setSelectedNiche] = useState('all');
-  const [shortsOnly, setShortsOnly] = useState(false);
 
   const filtered = useMemo(() => {
     return videos.filter(v => {
       if (v.outlierScore < minScore) return false;
       if (v.subscriberCount > maxSubs) return false;
       if (selectedNiche !== 'all' && v.niche !== selectedNiche) return false;
-      if (shortsOnly && !v.isShort) return false;
       return true;
     });
-  }, [videos, minScore, maxSubs, selectedNiche, shortsOnly]);
+  }, [videos, minScore, maxSubs, selectedNiche]);
 
   const columns = useMemo<ColumnDef<VideoRow>[]>(() => [
     {
@@ -172,17 +171,6 @@ export default function VideosTable({ videos, niches }: Props) {
             </SelectContent>
           </Select>
         </div>
-        <div className="flex flex-col gap-1 self-end">
-          <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={shortsOnly}
-              onChange={e => setShortsOnly(e.target.checked)}
-              className="accent-purple-500"
-            />
-            Shorts only
-          </label>
-        </div>
         <span className="text-gray-500 text-sm ml-auto self-end">
           {filtered.length} results
         </span>
@@ -210,7 +198,7 @@ export default function VideosTable({ videos, niches }: Props) {
             {table.getRowModel().rows.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={columns.length} className="text-center text-gray-500 py-8">
-                  No videos match the current filters. Try scraping a keyword first.
+                  No results yet.
                 </TableCell>
               </TableRow>
             ) : (
