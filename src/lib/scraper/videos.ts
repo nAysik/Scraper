@@ -12,7 +12,7 @@ export interface ChannelVideosResult {
   videos: VideoMeta[];
 }
 
-function parseViewCount(text: string): number {
+export function parseViewCount(text: string): number {
   const cleaned = text.replace(/[^0-9.KMBkmb]/g, '').toUpperCase();
   const num = parseFloat(cleaned);
   if (isNaN(num)) return 0;
@@ -22,7 +22,7 @@ function parseViewCount(text: string): number {
   return Math.round(num);
 }
 
-function parseRelativeDate(text: string): Date {
+export function parseRelativeDate(text: string): Date {
   const now = new Date();
   const lower = text.toLowerCase();
 
@@ -46,7 +46,7 @@ function parseRelativeDate(text: string): Date {
 
 const NINETY_DAYS_MS = 90 * 24 * 60 * 60 * 1000;
 
-function parseSubscriberCount(text: string): number {
+export function parseSubscriberCount(text: string): number {
   const match = text.match(/([\d.]+)\s*([KMB])/i);
   if (!match) {
     const n = parseFloat(text.replace(/[^0-9.]/g, ''));

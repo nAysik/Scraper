@@ -32,7 +32,7 @@ export async function upsertChannel(channel: ChannelMeta & { nicheId?: string })
 }
 
 export async function upsertVideo(
-  video: VideoMeta & { channelId: string; outlierScore: number; nicheId?: string }
+  video: VideoMeta & { channelId: string; outlierScore: number; nicheId?: string; isShort?: boolean }
 ): Promise<void> {
   const sb = getServiceClient();
 
@@ -44,6 +44,7 @@ export async function upsertVideo(
       view_count:    video.viewCount,
       published_at:  video.publishedAt.toISOString(),
       outlier_score: video.outlierScore,
+      is_short:      video.isShort ?? false,
     },
     { onConflict: 'youtube_id' }
   );

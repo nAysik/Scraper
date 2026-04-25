@@ -1,0 +1,15 @@
+name: Daily Shorts scrape
+
+on:
+  schedule:
+    - cron: '0 0 * * *'
+  workflow_dispatch:
+
+jobs:
+  shorts:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Shorts cron endpoint
+        run: |
+          curl -f -X GET "${{ secrets.APP_URL }}/api/cron/shorts" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}"

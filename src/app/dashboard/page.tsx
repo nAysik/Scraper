@@ -15,7 +15,7 @@ export default async function DashboardPage() {
     supabase
       .from('videos')
       .select(`
-        id, youtube_id, title, view_count, published_at, outlier_score,
+        id, youtube_id, title, view_count, published_at, outlier_score, is_short,
         channels ( name, subscriber_count, niches ( name ) )
       `)
       .order('outlier_score', { ascending: false })
@@ -33,6 +33,7 @@ export default async function DashboardPage() {
     outlierScore:    Number(v.outlier_score),
     niche:           (v.channels as any)?.niches?.name ?? null,
     publishedAt:     v.published_at,
+    isShort:         v.is_short as boolean,
   }));
 
   const niches = (nichesRaw ?? []).map((n: any) => ({ id: n.id, name: n.name }));

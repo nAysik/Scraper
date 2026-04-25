@@ -29,6 +29,7 @@ export interface VideoRow {
   outlierScore: number;
   niche: string | null;
   publishedAt: string;
+  isShort: boolean;
 }
 
 interface Props {
@@ -53,29 +54,40 @@ export default function VideosTable({ videos, niches }: Props) {
   const [minScore, setMinScore] = useState(0);
   const [maxSubs, setMaxSubs] = useState(50_000_000);
   const [selectedNiche, setSelectedNiche] = useState('all');
+  const [shortsOnly, setShortsOnly] = useState(false);
 
   const filtered = useMemo(() => {
     return videos.filter(v => {
       if (v.outlierScore < minScore) return false;
       if (v.subscriberCount > maxSubs) return false;
       if (selectedNiche !== 'all' && v.niche !== selectedNiche) return false;
+      if (shortsOnly && !v.isShort) return false;
       return true;
     });
-  }, [videos, minScore, maxSubs, selectedNiche]);
+  }, [videos, minScore, maxSubs, selectedNiche, shortsOnly]);
 
   const columns = useMemo<ColumnDef<VideoRow>[]>(() => [
     {
       accessorKey: 'title',
       header: 'Title',
       cell: ({ row }) => (
-        <a
-          href={`https://youtube.com/watch?v=${row.original.youtubeId}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-blue-400 hover:underline max-w-xs block truncate"
-        >
-          {row.original.title}
-        </a>
+        <span className="flex items-center gap-2">
+          {row.original.isShort && (
+            <span className="shrink-0 rounded bg-purple-600 px-1.5 py-0.5 text-xs text-white">Short</span>
+          )}
+          <a
+            href={
+              row.original.isShort
+                ? `https://youtube.com/shorts/${row.original.youtubeId}`
+                : `https://youtube.com/watch?v=${row.original.youtubeId}`
+            }
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-400 hover:underline max-w-xs block truncate"
+          >
+            {row.original.title}
+          </a>
+        </span>
       ),
     },
     {
@@ -159,6 +171,17 @@ export default function VideosTable({ videos, niches }: Props) {
               ))}
             </SelectContent>
           </Select>
+        </div>
+        <div className="flex flex-col gap-1 self-end">
+          <label className="flex items-center gap-2 text-sm text-gray-200 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={shortsOnly}
+              onChange={e => setShortsOnly(e.target.checked)}
+              className="accent-purple-500"
+            />
+            Shorts only
+          </label>
         </div>
         <span className="text-gray-500 text-sm ml-auto self-end">
           {filtered.length} results
