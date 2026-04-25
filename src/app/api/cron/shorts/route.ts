@@ -4,15 +4,41 @@ import { calcOutlierScore } from '@/lib/pipeline/outlier';
 import { upsertChannel, upsertVideo, getNicheIdMap } from '@/lib/pipeline/upsert';
 import { categorizeByKeywords } from '@/lib/pipeline/keyword-categorize';
 
-// One representative keyword per niche — keep in sync with keyword-categorize.ts
 const SHORTS_KEYWORDS = [
-  'finance',            // Faceless Finance
-  'tech review',        // Tech Reviews
-  'ai tools',           // AI Tools
-  'productivity',       // Productivity
-  'workout',            // Health & Fitness
-  'gaming highlights',  // Gaming Clips
-  'how to',             // Education
+  // Broad & Evergreen
+  'shorts', 'youtube shorts', 'in 60 seconds', 'under 1 minute', 'viral', 'trending', 'fyp',
+
+  // Entertainment & Humor
+  'pranks', 'street interview', 'challenge', 'oddly satisfying', 'mrbeast challenge',
+  'brain rot', 'funny moments', 'standup comedy clips', 'fail compilation',
+  'tiktok trends', 'dance challenge', 'magic trick',
+
+  // Gaming
+  'gta 5 funny moments', 'gta 5 stunts', 'minecraft shorts', 'minecraft hacks',
+  'roblox edits', 'roblox gameplay', 'fortnite clips', 'fortnite highlights',
+  'gaming setup', 'streamer clips', 'vtuber clips',
+
+  // Food & Cooking
+  'quick recipes', '30 second recipe', 'food hacks', 'easy meals', 'cooking tips',
+  'lunchbox ideas', 'mukbang shorts', 'spicy food challenge', 'chocolate hacks',
+  'gordon ramsay clips', 'street food',
+
+  // Productivity, Education & Hacks
+  'life hacks', 'cleaning hacks', 'organization tips', 'study tips', 'productivity hacks',
+  'fun facts', 'history facts', 'geography facts', 'animal facts', 'space facts', 'finance tips',
+
+  // Tech & E-commerce
+  'tech review', 'unboxing', 'gadget review', 'amazon finds', 'tiktok made me buy it',
+  'tech deals', 'desk setup', 'smartphone hacks', 'hidden features', 'dropshipping products',
+
+  // Lifestyle, Health & Beauty
+  'mini vlog', 'day in the life', 'morning routine', 'skincare hacks', '5 minute makeup',
+  'fashion finds', 'try on haul', 'fitness tips', 'quick workout', 'gym hacks',
+  'travel goals', 'hidden gems travel',
+
+  // Family & Crafts
+  'diy crafts', 'upcycling', 'room transformation', 'parenting hacks', 'gender reveal',
+  'wedding moments', 'fatherhood', 'pet tricks', 'cute animals',
 ] as const;
 
 export async function GET(request: NextRequest) {
