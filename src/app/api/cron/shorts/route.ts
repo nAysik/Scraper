@@ -7,38 +7,53 @@ import { categorizeByKeywords } from '@/lib/pipeline/keyword-categorize';
 const SHORTS_KEYWORDS = [
   // Broad & Evergreen
   'shorts', 'youtube shorts', 'in 60 seconds', 'under 1 minute', 'viral', 'trending', 'fyp',
+  'how to', 'satisfying', 'pov', 'transformation', 'before and after', 'asmr',
 
   // Entertainment & Humor
   'pranks', 'street interview', 'challenge', 'oddly satisfying', 'mrbeast challenge',
   'brain rot', 'funny moments', 'standup comedy clips', 'fail compilation',
-  'tiktok trends', 'dance challenge', 'magic trick',
+  'tiktok trends', 'dance challenge', 'magic trick', 'plot twist', 'celebrity moments',
+  'satisfying videos', 'sports highlights', 'nba shorts', 'soccer goals',
 
   // Gaming
   'gta 5 funny moments', 'gta 5 stunts', 'minecraft shorts', 'minecraft hacks',
   'roblox edits', 'roblox gameplay', 'fortnite clips', 'fortnite highlights',
-  'gaming setup', 'streamer clips', 'vtuber clips',
+  'gaming setup', 'streamer clips', 'vtuber clips', 'gaming highlights',
+  'speedrun', 'gaming rage', 'mobile gaming', 'retro gaming',
 
   // Food & Cooking
   'quick recipes', '30 second recipe', 'food hacks', 'easy meals', 'cooking tips',
   'lunchbox ideas', 'mukbang shorts', 'spicy food challenge', 'chocolate hacks',
-  'gordon ramsay clips', 'street food',
+  'gordon ramsay clips', 'street food', 'meal prep', 'baking hacks', 'food asmr',
 
   // Productivity, Education & Hacks
   'life hacks', 'cleaning hacks', 'organization tips', 'study tips', 'productivity hacks',
   'fun facts', 'history facts', 'geography facts', 'animal facts', 'space facts', 'finance tips',
+  'productivity', 'did you know', 'science facts', 'math tricks', 'book summary',
+  'language learning', 'self improvement',
 
-  // Tech & E-commerce
+  // Tech, AI & E-commerce
   'tech review', 'unboxing', 'gadget review', 'amazon finds', 'tiktok made me buy it',
   'tech deals', 'desk setup', 'smartphone hacks', 'hidden features', 'dropshipping products',
+  'ai tools', 'chatgpt', 'artificial intelligence', 'midjourney', 'coding shorts',
+
+  // Finance & Business
+  'finance', 'investing', 'stock market', 'crypto', 'passive income',
+  'side hustle', 'money hacks', 'entrepreneur tips', 'budget tips',
 
   // Lifestyle, Health & Beauty
   'mini vlog', 'day in the life', 'morning routine', 'skincare hacks', '5 minute makeup',
   'fashion finds', 'try on haul', 'fitness tips', 'quick workout', 'gym hacks',
-  'travel goals', 'hidden gems travel',
+  'travel goals', 'hidden gems travel', 'workout', 'weight loss', 'abs workout',
+  'hiit workout', 'yoga shorts', 'glow up', 'thrift flip', 'apartment tour',
 
-  // Family & Crafts
+  // Motivation & Mindset
+  'motivational shorts', 'mindset', 'success tips',
+
+  // Family, Animals & Crafts
   'diy crafts', 'upcycling', 'room transformation', 'parenting hacks', 'gender reveal',
   'wedding moments', 'fatherhood', 'pet tricks', 'cute animals',
+  'dog tricks', 'wildlife', 'baby animals',
 ] as const;
 
 export async function GET(request: NextRequest) {
