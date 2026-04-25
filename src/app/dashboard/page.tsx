@@ -2,6 +2,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import VideosTable, { type VideoRow } from '@/components/videos-table';
 import SearchForm from '@/components/search-form';
+import NicheStatsCards from '@/components/niche-stats-cards';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,7 +17,7 @@ export default async function KeywordsScraperPage() {
       .from('videos')
       .select(`
         id, youtube_id, title, view_count, published_at, outlier_score, is_short,
-        channels ( name, subscriber_count, niches ( name ) )
+        channels ( youtube_id, name, subscriber_count, niches ( name ) )
       `)
       .eq('is_short', false)
       .order('outlier_score', { ascending: false })
@@ -25,16 +26,17 @@ export default async function KeywordsScraperPage() {
   ]);
 
   const videos: VideoRow[] = (videosRaw ?? []).map((v: any) => ({
-    id:              v.id,
-    youtubeId:       v.youtube_id,
-    title:           v.title,
-    channelName:     v.channels?.name ?? '—',
-    subscriberCount: v.channels?.subscriber_count ?? 0,
-    viewCount:       v.view_count,
-    outlierScore:    Number(v.outlier_score),
-    niche:           (v.channels as any)?.niches?.name ?? null,
-    publishedAt:     v.published_at,
-    isShort:         false,
+    id:                v.id,
+    youtubeId:         v.youtube_id,
+    channelYoutubeId:  v.channels?.youtube_id ?? '',
+    title:             v.title,
+    channelName:       v.channels?.name ?? '—',
+    subscriberCount:   v.channels?.subscriber_count ?? 0,
+    viewCount:         v.view_count,
+    outlierScore:      Number(v.outlier_score),
+    niche:             (v.channels as any)?.niches?.name ?? null,
+    publishedAt:       v.published_at,
+    isShort:           false,
   }));
 
   const niches = (nichesRaw ?? []).map((n: any) => ({ id: n.id, name: n.name }));
@@ -42,6 +44,7 @@ export default async function KeywordsScraperPage() {
   return (
     <div className="space-y-6">
       <SearchForm />
+      <NicheStatsCards videos={videos} />
       <VideosTable videos={videos} niches={niches} defaultSort="outlierScore" />
     </div>
   );

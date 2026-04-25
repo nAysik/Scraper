@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation';
 const tabs = [
   { label: 'Keywords Scraper', href: '/dashboard' },
   { label: 'Top Viral Charts', href: '/dashboard/charts' },
+  { label: 'Niche Insights', href: '/dashboard/niches' },
 ];
 
 export default function DashboardNav() {

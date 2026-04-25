@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useState, useMemo } from 'react';
 import {
   useReactTable,
@@ -22,6 +23,7 @@ import {
 export interface VideoRow {
   id: string;
   youtubeId: string;
+  channelYoutubeId: string;
   title: string;
   channelName: string;
   subscriberCount: number;
@@ -35,7 +37,11 @@ export interface VideoRow {
 interface Props {
   videos: VideoRow[];
   niches: { id: string; name: string }[];
-  defaultSort?: 'outlierScore' | 'viewCount';
+  defaultSort?: 'outlierScore' | 'viewCount' | 'velocity';
+}
+
+function daysSince(dateStr: string): number {
+  return Math.max(1, Math.round((Date.now() - new Date(dateStr).getTime()) / 86_400_000));
 }
 
 function ScoreBadge({ score }: { score: number }) {
@@ -55,15 +61,18 @@ export default function VideosTable({ videos, niches, defaultSort = 'outlierScor
   const [minScore, setMinScore] = useState(0);
   const [maxSubs, setMaxSubs] = useState(50_000_000);
   const [selectedNiche, setSelectedNiche] = useState('all');
+  const [titleSearch, setTitleSearch] = useState('');
 
   const filtered = useMemo(() => {
+    const q = titleSearch.toLowerCase();
     return videos.filter(v => {
       if (v.outlierScore < minScore) return false;
       if (v.subscriberCount > maxSubs) return false;
       if (selectedNiche !== 'all' && v.niche !== selectedNiche) return false;
+      if (q && !v.title.toLowerCase().includes(q)) return false;
       return true;
     });
-  }, [videos, minScore, maxSubs, selectedNiche]);
+  }, [videos, minScore, maxSubs, selectedNiche, titleSearch]);
 
   const columns = useMemo<ColumnDef<VideoRow>[]>(() => [
     {
@@ -92,6 +101,14 @@ export default function VideosTable({ videos, niches, defaultSort = 'outlierScor
     {
       accessorKey: 'channelName',
       header: 'Channel',
+      cell: ({ row }) => (
+        <Link
+          href={`/dashboard/channel/${row.original.channelYoutubeId}`}
+          className="text-gray-200 hover:text-white hover:underline"
+        >
+          {row.original.channelName}
+        </Link>
+      ),
     },
     {
       accessorKey: 'subscriberCount',
@@ -102,6 +119,16 @@ export default function VideosTable({ videos, niches, defaultSort = 'outlierScor
       accessorKey: 'viewCount',
       header: 'Views',
       cell: ({ getValue }) => fmt(getValue() as number),
+    },
+    {
+      id: 'velocity',
+      header: 'Velocity',
+      accessorFn: (row) => Math.round(row.viewCount / daysSince(row.publishedAt)),
+      cell: ({ getValue }) => (
+        <span className="text-emerald-400 text-sm font-medium">
+          {fmt(getValue() as number)}/day
+        </span>
+      ),
     },
     {
       accessorKey: 'outlierScore',
@@ -135,6 +162,16 @@ export default function VideosTable({ videos, niches, defaultSort = 'outlierScor
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap gap-3 items-end">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs text-gray-400">Search titles</label>
+          <Input
+            type="text"
+            value={titleSearch}
+            placeholder="e.g. morning routine"
+            onChange={e => setTitleSearch(e.target.value)}
+            className="w-44 bg-gray-800 border-gray-700 text-white placeholder:text-gray-600"
+          />
+        </div>
         <div className="flex flex-col gap-1">
           <label className="text-xs text-gray-400">Min score</label>
           <Input

@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { getChannelRecentVideos } from '@/lib/scraper/videos';
 import { calcOutlierScore } from '@/lib/pipeline/outlier';
-import { upsertVideo, getStaleChannels, getNicheIdMap } from '@/lib/pipeline/upsert';
+import { upsertVideo, upsertSnapshot, getStaleChannels, getNicheIdMap } from '@/lib/pipeline/upsert';
 import { categorizeByKeywords } from '@/lib/pipeline/keyword-categorize';
 import { createClient } from '@supabase/supabase-js';
 
@@ -36,7 +36,8 @@ export async function GET(request: NextRequest) {
         const score = calcOutlierScore(video.viewCount, subscriberCount);
         const nicheName = categorizeByKeywords(video.title);
         const nicheId = nicheMap[nicheName];
-        await upsertVideo({ ...video, channelId: channel.id, outlierScore: score, nicheId });
+        const videoDbId = await upsertVideo({ ...video, channelId: channel.id, outlierScore: score, nicheId });
+        await upsertSnapshot(videoDbId, video.viewCount);
         updated++;
       }
 
