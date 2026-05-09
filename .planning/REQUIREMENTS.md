@@ -64,8 +64,24 @@
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DB-01, DB-02 | TBD | Pending |
-| ENR-01 – ENR-08 | TBD | Pending |
-| DIS-01 – DIS-04 | TBD | Pending |
-| DASH-01 – DASH-05 | TBD | Pending |
-| EXP-01 – EXP-02 | TBD | Pending |
+| DB-01 | Phase 1 — Database Foundation | Pending |
+| DB-02 | Phase 1 — Database Foundation | Pending |
+| ENR-01 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-02 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-03 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-04 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-05 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-06 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-07 | Phase 2 — Enrichment Pipeline | Pending |
+| ENR-08 | Phase 2 — Enrichment Pipeline | Pending |
+| DIS-01 | Phase 3 — Channel Discovery | Pending |
+| DIS-02 | Phase 3 — Channel Discovery | Pending |
+| DIS-03 | Phase 3 — Channel Discovery | Pending |
+| DIS-04 | Phase 3 — Channel Discovery | Pending |
+| DASH-01 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-02 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-03 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-04 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-05 | Phase 4 — Outreach Dashboard & Export | Pending |
+| EXP-01 | Phase 4 — Outreach Dashboard & Export | Pending |
+| EXP-02 | Phase 4 — Outreach Dashboard & Export | Pending |
