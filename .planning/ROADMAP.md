@@ -26,7 +26,7 @@
 2. Authenticated users can read rows from `outreach_channels`; unauthenticated requests are rejected by RLS.
 3. Service role writes (INSERT, UPDATE) to `outreach_channels` succeed without error from a Route Handler using `createServiceClient()`.
 **Plans:** 1 plan
-- [ ] 01-01-PLAN.md — Author migration 004, apply via Supabase Dashboard, smoke-test RLS + service-role write
+- [x] 01-01-PLAN.md — Author migration 004, apply via Supabase Dashboard, smoke-test RLS + service-role write
 
 ### Phase 2: Enrichment Pipeline
 **Goal:** A user can paste one or more YouTube channel URLs (or handles) into a form, the app fetches the last 10 video titles + view counts and the channel description via InnerTube, GPT-4o-mini extracts the top 3 games covered and primary genre, median views are calculated, and the enriched record is upserted into `outreach_channels`.
