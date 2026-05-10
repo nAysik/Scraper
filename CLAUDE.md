@@ -26,7 +26,7 @@ Copy `.env.local` and fill in all keys before running anything:
 | `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Public anon key (safe in browser) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Service role key — server-only, bypasses RLS |
-| `PERPLEXITY_API_KEY` | Perplexity `sonar` model for niche categorization |
+| `OPENAI_API_KEY` | OpenAI gpt-4o-mini for outreach game/genre extraction |
 | `CRON_SECRET` | Bearer token protecting cron endpoints |
 | `PROXY_URL` | Optional residential proxy for InnerTube requests |
 
@@ -45,7 +45,7 @@ POST /api/scrape {keyword}
   → searchChannelsByKeyword()       # InnerTube channel search
   → getChannelRecentVideos()        # InnerTube videos tab, last 90 days
   → calcOutlierScore()              # views / subscribers, drop < 1x
-  → categorizeInBatches()           # Perplexity `sonar` via OpenAI SDK (custom baseURL), batches of 20
+  → categorizeByKeywords()           # keyword-based niche assignment (no LLM), per-video
   → upsertChannel() / upsertVideo() # Supabase service role
 
 GET /api/cron/scrape (Bearer token)
@@ -66,10 +66,27 @@ GET /api/cron/shorts (Bearer token)
 
 The Shorts pipeline skips the LLM categorizer entirely and uses `src/lib/pipeline/keyword-categorize.ts` (a `NICHE_KEYWORDS` map) to avoid rate limits and latency across hundreds of keywords.
 
+### Data flow — outreach enrichment
+
+```
+POST /api/outreach/enrich {text}    # newline-separated URLs, max 15
+  → canonicalizeUrl()                # strip query, normalise host, accept handle/UC/full URL
+  → resolveChannel()                 # InnerTube resolveURL → browseId
+  → fetchChannelData()               # InnerTube getChannel + getAbout + last 10 videos
+  → medianViews()                    # pure: middle / avg-of-two-middle
+  → extractGamesGenre()              # OpenAI gpt-4o-mini, structured output, single call
+  → upsertOutreachChannel()          # service role, onConflict: youtube_id
+
+Response: { succeeded: number, failed: [{url,reason}], partial: [{url,reason}] }
+```
+
+The outreach pipeline is auth-gated (no cron equivalent in v1) and submits-and-waits — the UI (`src/components/outreach/enrich-form.tsx`) shows a spinner during the request and renders an inline summary panel on completion. Per-channel partial-save semantics: if the LLM call fails, the row is saved with `top_games` / `genre` set to null and the URL appears in the response's `partial[]` array.
+
 ### Key library boundaries
 
 - **`src/lib/scraper/`** — InnerTube only. `innertube.ts` holds a module-level singleton client (re-created if `PROXY_URL` is set). `channels.ts` and `videos.ts` cast youtubei.js nodes to `any` because the library's internal node types are not reliably exported. `shorts.ts` follows the same pattern and also exports `getChannelSubscriberCount`.
-- **`src/lib/pipeline/`** — pure business logic. `outlier.ts` is a one-liner. `categorize.ts` owns the niche taxonomy (`NICHE_NAMES` array) and the OpenAI prompt for regular videos. `keyword-categorize.ts` owns `NICHE_KEYWORDS` for Shorts. `upsert.ts` owns all Supabase writes and calls `@supabase/supabase-js` directly to avoid import cycles with the SSR client.
+- **`src/lib/pipeline/`** — pure business logic. `outlier.ts` is a one-liner. `keyword-categorize.ts` owns `NICHE_KEYWORDS` for keyword-based niche assignment (used by all three legacy route handlers). `upsert.ts` owns all Supabase writes for the legacy `channels` / `videos` tables and calls `@supabase/supabase-js` directly to avoid import cycles with the SSR client.
+- **`src/lib/outreach/`** — Phase 2 bounded context. Imports `youtubei.js` (via `src/lib/scraper/innertube.ts`'s singleton), `openai`, and `createServiceClient()` from `src/lib/supabase/server.ts`. Owns the gpt-4o-mini extractor (`extract-games.ts`), URL canonicalization, channel resolution, the closed `Genre` enum (`genre-taxonomy.ts`), and the upsert into `outreach_channels`. Does NOT replicate `pipeline/upsert.ts`'s service-client construction — uses the canonical helper.
 - **`src/lib/supabase/server.ts`** — SSR client (cookie-based session) for Server Components and Route Handlers that need the logged-in user. Also exports `createServiceClient()` but `upsert.ts` bypasses it.
 
 ### Auth
