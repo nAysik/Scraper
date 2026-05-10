@@ -103,8 +103,10 @@ The outreach pipeline is auth-gated (no cron equivalent in v1) and submits-and-w
 
 ## Balancing knobs
 
-- Regular video niche taxonomy: `NICHE_NAMES` in `src/lib/pipeline/categorize.ts` (also update the Supabase `niches` seed data)
-- Shorts niche taxonomy: `NICHE_KEYWORDS` in `src/lib/pipeline/keyword-categorize.ts`
+- Niche taxonomy (regular videos + Shorts): `NICHE_KEYWORDS` map in `src/lib/pipeline/keyword-categorize.ts` (keep in sync with the Supabase `niches` seed data)
+- Outreach genre taxonomy: `GENRES` in `src/lib/outreach/genre-taxonomy.ts` (closed enum, used in gpt-4o-mini's strict JSON schema)
+- Outreach batch cap: `MAX_BATCH = 15` in `src/components/outreach/enrich-form.tsx` and the matching server-side check in `src/app/api/outreach/enrich/route.ts`
+- Outreach LLM model + timeout: `gpt-4o-mini` and 20s timeout in `src/lib/outreach/extract-games.ts`
 - Shorts keyword sweep: `SHORTS_KEYWORDS` array in `src/app/api/cron/shorts/route.ts`
 - Outlier score threshold: `score < 1` check in both API route handlers
 - Video recency window: `NINETY_DAYS_MS` in `src/lib/scraper/videos.ts`
