@@ -14,6 +14,8 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
+  // [APPROVED OVERRIDE]: tolerate empty/malformed body — the !keyword check
+  // below returns 400 with a clear message, which is the desired UX.
   const body = await request.json().catch(() => ({}));
   const keyword = typeof body.keyword === 'string' ? body.keyword.trim() : '';
 

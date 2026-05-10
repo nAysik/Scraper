@@ -38,7 +38,8 @@ export default function SearchForm({ onComplete }: { onComplete?: () => void }) 
         setResult(data as ScrapeResult);
         onComplete?.();
       }
-    } catch {
+    } catch (err) {
+      console.error('[search-form] fetch failed', err);
       setError('Network error — please try again');
     } finally {
       setLoading(false);

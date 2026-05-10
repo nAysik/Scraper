@@ -74,7 +74,8 @@ export async function GET(request: NextRequest) {
     for (const channelId of uniqueChannelIds) {
       try {
         subCountMap.set(channelId, await getChannelSubscriberCount(channelId));
-      } catch {
+      } catch (err) {
+        console.error('[cron/shorts] subscriber count failed', channelId, err);
         // 0 subs → outlierScore 0, Short sinks to bottom of table rather than crashing the run
         subCountMap.set(channelId, 0);
       }
