@@ -7,6 +7,7 @@ const tabs = [
   { label: 'Keywords Scraper', href: '/dashboard' },
   { label: 'Top Viral Charts', href: '/dashboard/charts' },
   { label: 'Niche Insights', href: '/dashboard/niches' },
+  { label: 'Outreach', href: '/dashboard/outreach' },
 ];
 
 export default function DashboardNav() {
