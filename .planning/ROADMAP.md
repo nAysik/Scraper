@@ -8,8 +8,8 @@
 
 ## Phases
 
-- [ ] **Phase 1: Database Foundation** — Create `outreach_channels` Supabase table with migration and RLS
-- [ ] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
+- [x] **Phase 1: Database Foundation** — Create `outreach_channels` Supabase table with migration and RLS
+- [x] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
 - [ ] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
 - [ ] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
 
@@ -39,11 +39,11 @@
 4. GPT is called once per channel (not per video), combining video titles and channel description in a single prompt to control API cost.
 5. Re-submitting a URL that already exists in `outreach_channels` updates (upserts) the existing row rather than creating a duplicate.
 **Plans:** 5 plans
-- [ ] 02-01-PLAN.md — Delete dead Perplexity categorizer (D-09 cleanup)
-- [ ] 02-02-PLAN.md — Outreach pipeline library (canonicalize, resolve, fetch, median, extract, upsert)
-- [ ] 02-03-PLAN.md — POST /api/outreach/enrich route handler + smoke test
-- [ ] 02-04-PLAN.md — EnrichForm UI, /dashboard/outreach page, nav tab
-- [ ] 02-05-PLAN.md — CLAUDE.md docs update (env table swap, outreach data flow)
+- [x] 02-01-PLAN.md — Delete dead Perplexity categorizer (D-09 cleanup)
+- [x] 02-02-PLAN.md — Outreach pipeline library (canonicalize, resolve, fetch, median, extract, upsert)
+- [x] 02-03-PLAN.md — POST /api/outreach/enrich route handler + smoke test
+- [x] 02-04-PLAN.md — EnrichForm UI, /dashboard/outreach page, nav tab
+- [x] 02-05-PLAN.md — CLAUDE.md docs update (env table swap, outreach data flow)
 **UI hint**: yes
 
 ### Phase 3: Channel Discovery
@@ -77,7 +77,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Database Foundation | 0/1 | Not started | - |
-| 2. Enrichment Pipeline | 0/0 | Not started | - |
+| 1. Database Foundation | 1/1 | Complete | 2026-05-10 |
+| 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 0/0 | Not started | - |
 | 4. Outreach Dashboard & Export | 0/0 | Not started | - |
