@@ -25,7 +25,8 @@
 1. Running the migration SQL in the Supabase dashboard creates the `outreach_channels` table with all required columns (youtube_id, name, url, subscriber_count, top_games, genre, median_views, last_enriched_at).
 2. Authenticated users can read rows from `outreach_channels`; unauthenticated requests are rejected by RLS.
 3. Service role writes (INSERT, UPDATE) to `outreach_channels` succeed without error from a Route Handler using `createServiceClient()`.
-**Plans:** TBD
+**Plans:** 1 plan
+- [ ] 01-01-PLAN.md — Author migration 004, apply via Supabase Dashboard, smoke-test RLS + service-role write
 
 ### Phase 2: Enrichment Pipeline
 **Goal:** A user can paste one or more YouTube channel URLs (or handles) into a form, the app fetches the last 10 video titles + view counts and the channel description via InnerTube, GPT-4o-mini extracts the top 3 games covered and primary genre, median views are calculated, and the enriched record is upserted into `outreach_channels`.
@@ -71,7 +72,7 @@
 
 | Phase | Plans Complete | Status | Completed |
 |-------|----------------|--------|-----------|
-| 1. Database Foundation | 0/0 | Not started | - |
+| 1. Database Foundation | 0/1 | Not started | - |
 | 2. Enrichment Pipeline | 0/0 | Not started | - |
 | 3. Channel Discovery | 0/0 | Not started | - |
 | 4. Outreach Dashboard & Export | 0/0 | Not started | - |
