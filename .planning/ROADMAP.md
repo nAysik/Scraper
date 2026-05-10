@@ -38,7 +38,12 @@
 3. The UI shows per-channel progress while enrichment is running and a results summary (channels processed, any errors) when it completes.
 4. GPT is called once per channel (not per video), combining video titles and channel description in a single prompt to control API cost.
 5. Re-submitting a URL that already exists in `outreach_channels` updates (upserts) the existing row rather than creating a duplicate.
-**Plans:** TBD
+**Plans:** 5 plans
+- [ ] 02-01-PLAN.md — Delete dead Perplexity categorizer (D-09 cleanup)
+- [ ] 02-02-PLAN.md — Outreach pipeline library (canonicalize, resolve, fetch, median, extract, upsert)
+- [ ] 02-03-PLAN.md — POST /api/outreach/enrich route handler + smoke test
+- [ ] 02-04-PLAN.md — EnrichForm UI, /dashboard/outreach page, nav tab
+- [ ] 02-05-PLAN.md — CLAUDE.md docs update (env table swap, outreach data flow)
 **UI hint**: yes
 
 ### Phase 3: Channel Discovery
