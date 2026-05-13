@@ -16,11 +16,17 @@ import { getClient } from '@/lib/scraper/innertube';
 import { parseViewCount, parseRelativeDate, type VideoMeta } from '@/lib/scraper/videos';
 import { getChannelSubscriberCount } from '@/lib/scraper/shorts';
 
+export interface PlaylistMeta {
+  title: string;
+  videoCount: number;
+}
+
 export interface OutreachChannelData {
   name: string;
   subscriberCount: number;
   description: string;
   videos: VideoMeta[];
+  playlists: PlaylistMeta[];
 }
 
 async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelData> {
@@ -98,10 +104,38 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
     }
   }
 
+  // Playlists: primary signal for top_games extraction.
+  // YouTube returns LockupView nodes (same new shape as videos tab).
+  //   title:      item.metadata.title.text
+  //   videoCount: overlay badge text, e.g. "68 videos" → 68
+  // Wrapped in try/catch — failure is non-fatal; falls back to video-titles-only extraction.
+  let playlists: PlaylistMeta[] = [];
+  try {
+    if (channel.has_playlists) {
+      const playlistTab = await channel.getPlaylists();
+      for (const item of (playlistTab as any).playlists ?? []) {
+        const title: string = (item as any).metadata?.title?.text ?? '';
+        if (!title) continue;
+        const overlays: any[] = (item as any).content_image?.primary_thumbnail?.overlays ?? [];
+        let countText = '';
+        for (const o of overlays) {
+          const badge: string = (o as any).badges?.[0]?.text ?? '';
+          if (badge && /\d/.test(badge)) { countText = badge; break; }
+        }
+        const videoCount = countText ? parseInt(countText.replace(/[^0-9]/g, ''), 10) : 0;
+        if (videoCount > 0) playlists.push({ title, videoCount });
+      }
+      playlists.sort((a, b) => b.videoCount - a.videoCount);
+      playlists = playlists.slice(0, 20);
+    }
+  } catch {
+    playlists = [];
+  }
+
   // Reuse existing helper (verified src/lib/scraper/shorts.ts line 64).
   const subscriberCount = await getChannelSubscriberCount(channelId);
 
-  return { name, subscriberCount, description, videos };
+  return { name, subscriberCount, description, videos, playlists };
 }
 
 export async function fetchChannelData(channelId: string): Promise<OutreachChannelData | null> {
