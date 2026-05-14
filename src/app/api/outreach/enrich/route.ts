@@ -64,7 +64,7 @@ export async function POST(request: NextRequest) {
         }
 
         const median = medianViews(data.videos.map(v => v.viewCount));
-        const extracted = await extractGamesGenre(data.videos, data.description)
+        const extracted = await extractGamesGenre(data.videos, data.description, data.playlists)
           .catch(() => null);
 
         await upsertOutreachChannel({
