@@ -16,6 +16,7 @@
 import OpenAI from 'openai';
 import { GENRES, type Genre } from './genre-taxonomy';
 import type { VideoMeta } from '@/lib/scraper/videos';
+import type { PlaylistMeta } from './fetch-channel-data';
 
 export interface GameGenreResult {
   games: string[];   // 0..3 entries (≤3 enforced via prompt + .slice(0, 3))
@@ -45,31 +46,41 @@ const OPENAI_TIMEOUT_MS = 20_000;   // RESEARCH Pitfall 5
 export async function extractGamesGenre(
   videos: VideoMeta[],
   description: string,
+  playlists: PlaylistMeta[] = [],
 ): Promise<GameGenreResult> {
   const client = getOpenAI();
-  const titles = videos.map(v => v.title);
+
+  const systemPrompt = playlists.length > 0
+    ? `You analyse a YouTube gaming channel. Playlist data shows the creator's total body of work — ` +
+      `weight it heavily when identifying top games. Recent video titles indicate only what was uploaded recently. ` +
+      `Return the up-to-3 games most prominently covered (strings; prefer fewer if uncertain) and the channel's ` +
+      `primary genre — exactly one of: ${GENRES.join(', ')}. ` +
+      `Use "Other" only when none of the listed genres fit. ` +
+      `Use "Variety" for general gaming channels not focused on one genre.`
+    : `You analyse a YouTube gaming channel's recent videos and About page.\n` +
+      `Return the up-to-3 games most prominently covered (strings; pick at most 3, ` +
+      `prefer fewer if uncertain) and the channel's primary genre — ` +
+      `exactly one of: ${GENRES.join(', ')}. ` +
+      `Use "Other" only when none of the listed genres fit. ` +
+      `Use "Variety" for general gaming channels not focused on one genre.`;
+
+  const userContent = playlists.length > 0
+    ? JSON.stringify({
+        playlists_by_video_count: playlists.map(p => `${p.title}: ${p.videoCount}`).join(', '),
+        recent_video_titles: videos.map(v => v.title),
+        channel_about: description,
+      })
+    : JSON.stringify({
+        recent_video_titles: videos.map(v => v.title),
+        channel_about: description,
+      });
 
   const completionPromise = client.chat.completions.parse({
     model: 'gpt-4o-mini',
     temperature: 0,
     messages: [
-      {
-        role: 'system',
-        content:
-          `You analyse a YouTube gaming channel's recent videos and About page.\n` +
-          `Return the up-to-3 games most prominently covered (strings; pick at most 3, ` +
-          `prefer fewer if uncertain) and the channel's primary genre — ` +
-          `exactly one of: ${GENRES.join(', ')}. ` +
-          `Use "Other" only when none of the listed genres fit. ` +
-          `Use "Variety" for general gaming channels not focused on one genre.`,
-      },
-      {
-        role: 'user',
-        content: JSON.stringify({
-          recent_video_titles: titles,
-          channel_about: description,
-        }),
-      },
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userContent },
     ],
     response_format: {
       type: 'json_schema',
