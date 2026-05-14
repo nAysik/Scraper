@@ -74,6 +74,7 @@ export async function POST(request: NextRequest) {
           subscriberCount: data.subscriberCount,
           topGames:        extracted?.games ?? null,
           genre:           extracted?.genre ?? null,
+          email:           null,   // email extraction added in Phase 3
           medianViews:     median,
           lastEnrichedAt:  new Date().toISOString(),
         });
