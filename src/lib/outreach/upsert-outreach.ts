@@ -21,6 +21,7 @@ export interface OutreachUpsertRow {
   subscriberCount: number | null;
   topGames: string[] | null;
   genre: string | null;
+  email: string | null;
   medianViews: number | null;
   lastEnrichedAt: string;   // ISO 8601 timestamp
 }
@@ -37,6 +38,7 @@ export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<voi
         subscriber_count: row.subscriberCount,
         top_games:        row.topGames,
         genre:            row.genre,
+        email:            row.email,
         median_views:     row.medianViews,
         last_enriched_at: row.lastEnrichedAt,
       },
