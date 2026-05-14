@@ -1,10 +1,10 @@
 // src/app/dashboard/outreach/page.tsx
-// Phase 2 minimal version — hosts the EnrichForm only.
-// Phase 4 (DASH-*) expands this with a filterable table and CSV export below the form.
+// Phase 3 — server-component shell with auth gate; delegates to <OutreachTabs>
+// which switches between the Discover and Bulk-Enrich client experiences.
 
 import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
-import EnrichForm from '@/components/outreach/enrich-form';
+import { OutreachTabs } from '@/components/outreach/discovery-table';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,14 +16,13 @@ export default async function OutreachPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-white">Outreach Enrichment</h1>
+        <h1 className="text-xl font-semibold text-white">Channel Discovery</h1>
         <p className="text-sm text-gray-400 mt-1">
-          Paste up to 15 YouTube channel URLs (one per line). We&apos;ll fetch each
-          channel&apos;s last 10 videos, extract the top 3 games and primary genre,
-          and save the result to your outreach list.
+          Search for YouTube channels by game or keyword. Select up to 15 and save
+          them to your outreach list — enrichment runs automatically on save.
         </p>
       </div>
-      <EnrichForm />
+      <OutreachTabs />
     </div>
   );
 }
