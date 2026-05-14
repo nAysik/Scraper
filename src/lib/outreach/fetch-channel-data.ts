@@ -153,6 +153,18 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   return { name, subscriberCount, description, videos, playlists };
 }
 
+// Email extraction (Phase 3 D-12).
+// Regex pre-chosen in CONTEXT.md: covers business addresses like
+// `business@studio.dev`, `team+inbox@label.co`. First match wins.
+// Returns null when the description has no parseable email.
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
+
+export function extractEmail(description: string): string | null {
+  if (!description) return null;
+  const match = description.match(EMAIL_RE);
+  return match ? match[0] : null;
+}
+
 export async function fetchChannelData(channelId: string): Promise<OutreachChannelData | null> {
   try {
     return await fetchChannelDataOnce(channelId);

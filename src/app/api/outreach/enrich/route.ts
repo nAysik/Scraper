@@ -17,7 +17,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { canonicalizeUrl } from '@/lib/outreach/canonicalize-url';
 import { resolveChannel } from '@/lib/outreach/resolve-channel';
-import { fetchChannelData } from '@/lib/outreach/fetch-channel-data';
+import { fetchChannelData, extractEmail } from '@/lib/outreach/fetch-channel-data';
 import { medianViews } from '@/lib/outreach/median';
 import { extractGamesGenre } from '@/lib/outreach/extract-games';
 import { upsertOutreachChannel } from '@/lib/outreach/upsert-outreach';
@@ -46,6 +46,13 @@ export async function POST(request: NextRequest) {
   const succeeded: Array<{ url: string }> = [];
   const failed:    Array<{ url: string; reason: string }> = [];
   const partial:   Array<{ url: string; reason: string }> = [];
+  const enriched: Record<string, {
+    topGames: string[] | null;
+    genre: string | null;
+    email: string | null;
+    subscriberCount: number | null;
+    medianViews: number | null;
+  }> = {};
 
   try {
     for (const raw of unique) {
@@ -67,6 +74,16 @@ export async function POST(request: NextRequest) {
         const extracted = await extractGamesGenre(data.videos, data.description, data.playlists)
           .catch(() => null);
 
+        const email = extractEmail(data.description);
+
+        enriched[resolved.canonicalUrl] = {
+          topGames:        extracted?.games ?? null,
+          genre:           extracted?.genre ?? null,
+          email,
+          subscriberCount: data.subscriberCount,
+          medianViews:     median,
+        };
+
         await upsertOutreachChannel({
           youtubeId:       resolved.youtubeId,
           name:            data.name,
@@ -74,7 +91,7 @@ export async function POST(request: NextRequest) {
           subscriberCount: data.subscriberCount,
           topGames:        extracted?.games ?? null,
           genre:           extracted?.genre ?? null,
-          email:           null,   // email extraction added in Phase 3
+          email,
           medianViews:     median,
           lastEnrichedAt:  new Date().toISOString(),
         });
@@ -87,7 +104,7 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    return NextResponse.json({ succeeded: succeeded.length, failed, partial });
+    return NextResponse.json({ succeeded: succeeded.length, failed, partial, enriched });
   } catch (err: unknown) {
     console.error('[outreach/enrich] outer', err);
     return NextResponse.json(
