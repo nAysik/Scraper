@@ -56,7 +56,10 @@
 3. The user can select one or more discovered channels and save them to `outreach_channels` with a single action.
 4. Saving a channel that already exists in `outreach_channels` upserts (no duplicates).
 5. Business email is extracted from the channel's About page description via regex during enrichment and stored in `outreach_channels.email`.
-**Plans:** TBD
+**Plans:** 3 plans
+- [ ] 03-01-PLAN.md — Migration 005 (add email column) + plumb email through upsert + enrich route
+- [ ] 03-02-PLAN.md — searchVideosByKeyword scraper + POST /api/outreach/discover route (dual search, dedup, already-saved check)
+- [ ] 03-03-PLAN.md — DiscoveryPanel UI + OutreachTabs integration at /dashboard/outreach
 **UI hint**: yes
 
 ### Phase 4: Outreach Dashboard & Export
@@ -80,5 +83,5 @@
 |-------|----------------|--------|-----------|
 | 1. Database Foundation | 1/1 | Complete | 2026-05-10 |
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
-| 3. Channel Discovery | 0/0 | Not started | - |
+| 3. Channel Discovery | 0/3 | Not started | - |
 | 4. Outreach Dashboard & Export | 0/0 | Not started | - |

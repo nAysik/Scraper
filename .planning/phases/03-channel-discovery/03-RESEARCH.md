@@ -1,4 +1,4 @@
-# Phase 3: Channel Discovery - Research
+﻿# Phase 3: Channel Discovery - Research
 
 **Researched:** 2026-05-14
 **Domain:** InnerTube video search, channel deduplication, TanStack Table with checkboxes, Supabase column migration, email regex extraction
@@ -608,22 +608,25 @@ const res = await fetch('/api/outreach/enrich', {
 
 ---
 
-## Open Questions
+## Open Questions (RESOLVED)
 
 1. **Where does the discover UI live — new page or integrated section?**
    - What we know: UI-SPEC shows a `/dashboard/outreach/discover` separate page OR integration into the existing outreach page. DashboardNav uses exact match, so a sub-page breaks the active state.
    - What's unclear: Whether the planner wants to restructure DashboardNav or use a simpler intra-page tab/section.
    - Recommendation: Integrate as a tabbed section within `src/app/dashboard/outreach/page.tsx` — update the page to have an "Enrich" tab and a "Discover" tab. No nav changes needed.
+   - **(RESOLVED)** Planner chose the integrated-tab approach (Plan 03 Task 2): `OutreachTabs` lives in `discovery-table.tsx` and is consumed by `src/app/dashboard/outreach/page.tsx`. DashboardNav exact-match active state is preserved (Pitfall 6 avoided).
 
 2. **Should the discover endpoint also return subscriber count by making a separate getChannel() call per channel?**
    - What we know: D-03 says "subscriberCount if available in video metadata" — it's not available, so the field is null. D-08 requires default sort by subscriberCount ASC. Sorting nulls in TanStack Table puts them at top or bottom depending on comparator.
    - What's unclear: Whether nulls sorting first (top of table) with ASC is acceptable UX.
    - Recommendation: Accept null subscriber counts, sort nulls last (or treat 0), and show "—" in the table. After enrichment, the row updates with the real count.
+   - **(RESOLVED)** Planner chose the recommendation. `DiscoveredChannel.subscriberCount` is always `null` at discover time. Sort uses `Number.POSITIVE_INFINITY` as the null sentinel so nulls sort last under ASC (Plan 03 Task 1 `sortingFn`). Real values fill in after save via the `enriched` map returned by `/api/outreach/enrich` (Plan 01 Task 3 + Plan 03 Task 1 `handleSave`).
 
 3. **What exactly does `upload_date: 'week'` return — videos from the past 7 days, or the past calendar week?**
    - What we know: shorts.ts uses `upload_date: 'week'` + `SEVEN_DAYS_MS` cutoff guard, implying it's approximately 7 days.
    - What's unclear: Whether YouTube's definition is exactly 7 days or a rolling Monday-Sunday week.
    - Recommendation: Use `'week'` as designed; the shorts.ts code already applies a 7-day guard for age-filtering. For discovery, no date filtering is needed — any recent content is useful.
+   - **(RESOLVED)** Planner accepts `upload_date: 'week'` as-is. No per-result date filtering applied at discovery time; the filter is delegated to YouTube. Used in Plan 02 Task 2 as one of the two parallel search variants.
 
 ---
 
