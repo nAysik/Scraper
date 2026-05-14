@@ -114,21 +114,36 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
     if (channel.has_playlists) {
       const playlistTab = await channel.getPlaylists();
       for (const item of (playlistTab as any).playlists ?? []) {
-        const title: string = (item as any).metadata?.title?.text ?? '';
+        const anyItem = item as any;
+        // LockupView shape: metadata.title.text
+        // GridPlaylist shape: title.toString()
+        const title: string = anyItem.metadata?.title?.text
+          ?? anyItem.title?.toString()
+          ?? '';
         if (!title) continue;
-        const overlays: any[] = (item as any).content_image?.primary_thumbnail?.overlays ?? [];
-        let countText = '';
+
+        // LockupView shape: video count in thumbnail overlay badge ("68 videos")
+        let videoCount = 0;
+        const overlays: any[] = anyItem.content_image?.primary_thumbnail?.overlays ?? [];
         for (const o of overlays) {
           const badge: string = (o as any).badges?.[0]?.text ?? '';
-          if (badge && /\d/.test(badge)) { countText = badge; break; }
+          if (badge && /\d/.test(badge)) {
+            videoCount = parseInt(badge.replace(/[^0-9]/g, ''), 10);
+            break;
+          }
         }
-        const videoCount = countText ? parseInt(countText.replace(/[^0-9]/g, ''), 10) : 0;
+        // GridPlaylist shape fallback: video_count is a Text object
+        if (videoCount === 0) {
+          const countText: string = anyItem.video_count?.toString() ?? anyItem.video_count_short?.toString() ?? '';
+          videoCount = parseInt(countText.replace(/[^0-9]/g, ''), 10) || 0;
+        }
         if (videoCount > 0) playlists.push({ title, videoCount });
       }
       playlists.sort((a, b) => b.videoCount - a.videoCount);
       playlists = playlists.slice(0, 20);
     }
-  } catch {
+  } catch (err) {
+    console.warn('[outreach/fetch] playlist fetch failed, skipping', err);
     playlists = [];
   }
 
