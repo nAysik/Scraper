@@ -76,7 +76,7 @@ export async function POST(request: NextRequest) {
 
         const email = extractEmail(data.description);
 
-        enriched[resolved.canonicalUrl] = {
+        enriched[raw] = {
           topGames:        extracted?.games ?? null,
           genre:           extracted?.genre ?? null,
           email,
