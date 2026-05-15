@@ -24,6 +24,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import type { DiscoveredChannel } from '@/lib/scraper/search-videos';
 import EnrichForm from './enrich-form';
+import OutreachList from './outreach-list';
 
 const MAX_SAVE = 15;
 
@@ -460,7 +461,7 @@ export default function DiscoveryPanel() {
 // DiscoveryPanel. Keeps the page at /dashboard/outreach so DashboardNav's
 // exact-match active state still highlights the Outreach tab (Pitfall 6).
 export function OutreachTabs() {
-  const [tab, setTab] = useState<'discover' | 'enrich'>('discover');
+  const [tab, setTab] = useState<'discover' | 'enrich' | 'outreach-list'>('discover');
 
   return (
     <div className="space-y-6">
@@ -487,9 +488,22 @@ export function OutreachTabs() {
         >
           Bulk enrich
         </button>
+        <button
+          type="button"
+          onClick={() => setTab('outreach-list')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'outreach-list'
+              ? 'border-white text-white'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Outreach list
+        </button>
       </div>
 
-      {tab === 'discover' ? <DiscoveryPanel /> : <EnrichForm />}
+      {tab === 'discover'      && <DiscoveryPanel />}
+      {tab === 'enrich'        && <EnrichForm />}
+      {tab === 'outreach-list' && <OutreachList />}
     </div>
   );
 }
