@@ -11,7 +11,7 @@
 - [x] **Phase 1: Database Foundation** — Create `outreach_channels` Supabase table with migration and RLS
 - [x] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
 - [x] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
-- [ ] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
+- [x] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
 
 ---
 
@@ -72,9 +72,9 @@
 3. Clicking "Re-enrich" on any row triggers the enrichment pipeline for that channel and refreshes its data in the table.
 4. Clicking "Delete" on any row removes the channel from `outreach_channels` and it disappears from the table.
 5. Clicking "Export CSV" downloads a file containing all table rows and columns in a format that imports cleanly into Notion (UTF-8, comma-separated, header row matching column names).
-**Plans:** 1/2 plans executed
+**Plans:** 2/2 plans executed
 - [x] 04-01-PLAN.md — API routes: GET /api/outreach/channels, DELETE /api/outreach/channels/[youtubeId], POST /api/outreach/channels/bulk-delete
-- [ ] 04-02-PLAN.md — OutreachList component + OutreachTabs 3rd tab wiring
+- [x] 04-02-PLAN.md — OutreachList component + OutreachTabs 3rd tab wiring
 **UI hint**: yes
 
 ---
@@ -86,4 +86,4 @@
 | 1. Database Foundation | 1/1 | Complete | 2026-05-10 |
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
-| 4. Outreach Dashboard & Export | 1/2 | In Progress|  |
+| 4. Outreach Dashboard & Export | 2/2 | Complete | 2026-05-15 |
