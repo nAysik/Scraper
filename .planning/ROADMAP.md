@@ -10,7 +10,7 @@
 
 - [x] **Phase 1: Database Foundation** — Create `outreach_channels` Supabase table with migration and RLS
 - [x] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
-- [ ] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
+- [x] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
 - [ ] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
 
 ---
@@ -83,5 +83,5 @@
 |-------|----------------|--------|-----------|
 | 1. Database Foundation | 1/1 | Complete | 2026-05-10 |
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
-| 3. Channel Discovery | 0/3 | Not started | - |
+| 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
 | 4. Outreach Dashboard & Export | 0/0 | Not started | - |
