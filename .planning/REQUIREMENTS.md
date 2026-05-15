@@ -31,11 +31,11 @@
 
 ### Outreach Dashboard
 
-- [ ] **DASH-01**: Outreach tab visible in the existing dashboard navigation
+- [x] **DASH-01**: Outreach tab visible in the existing dashboard navigation
 - [ ] **DASH-02**: Outreach tab displays all enriched channels in a filterable table (filter by genre, min median views, min/max subscribers)
 - [ ] **DASH-03**: Table columns: channel name, YouTube link, subscribers, top 3 games, genre, median views, last enriched date
-- [ ] **DASH-04**: User can trigger re-enrichment of any channel from the table
-- [ ] **DASH-05**: User can delete a channel from the outreach database
+- [x] **DASH-04**: User can trigger re-enrichment of any channel from the table
+- [x] **DASH-05**: User can delete a channel from the outreach database
 
 ### Export
 
@@ -80,10 +80,10 @@
 | DIS-03 | Phase 3 — Channel Discovery | Complete |
 | DIS-04 | Phase 3 — Channel Discovery | Complete |
 | DIS-05 | Phase 3 — Channel Discovery | Complete |
-| DASH-01 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-01 | Phase 4 — Outreach Dashboard & Export | Complete |
 | DASH-02 | Phase 4 — Outreach Dashboard & Export | Pending |
 | DASH-03 | Phase 4 — Outreach Dashboard & Export | Pending |
-| DASH-04 | Phase 4 — Outreach Dashboard & Export | Pending |
-| DASH-05 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-04 | Phase 4 — Outreach Dashboard & Export | Complete |
+| DASH-05 | Phase 4 — Outreach Dashboard & Export | Complete |
 | EXP-01 | Phase 4 — Outreach Dashboard & Export | Pending |
 | EXP-02 | Phase 4 — Outreach Dashboard & Export | Pending |

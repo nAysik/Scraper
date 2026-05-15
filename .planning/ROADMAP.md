@@ -72,7 +72,9 @@
 3. Clicking "Re-enrich" on any row triggers the enrichment pipeline for that channel and refreshes its data in the table.
 4. Clicking "Delete" on any row removes the channel from `outreach_channels` and it disappears from the table.
 5. Clicking "Export CSV" downloads a file containing all table rows and columns in a format that imports cleanly into Notion (UTF-8, comma-separated, header row matching column names).
-**Plans:** TBD
+**Plans:** 1/2 plans executed
+- [x] 04-01-PLAN.md — API routes: GET /api/outreach/channels, DELETE /api/outreach/channels/[youtubeId], POST /api/outreach/channels/bulk-delete
+- [ ] 04-02-PLAN.md — OutreachList component + OutreachTabs 3rd tab wiring
 **UI hint**: yes
 
 ---
@@ -84,4 +86,4 @@
 | 1. Database Foundation | 1/1 | Complete | 2026-05-10 |
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
-| 4. Outreach Dashboard & Export | 0/0 | Not started | - |
+| 4. Outreach Dashboard & Export | 1/2 | In Progress|  |
