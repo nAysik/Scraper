@@ -23,10 +23,11 @@
 
 ### Channel Discovery
 
-- [ ] **DIS-01**: User can enter a keyword (e.g. "indie game review", "cozy games", "survival game") to search for relevant YouTube channels
-- [ ] **DIS-02**: Search returns a list of channels via InnerTube channel search
-- [ ] **DIS-03**: Discovered channels are automatically enriched (top games, genre, median views) before being shown
-- [ ] **DIS-04**: User can add selected discovered channels to the `outreach_channels` table
+- [ ] **DIS-01**: User can enter a keyword (e.g. "hades gameplay", "cozy games") to search for relevant YouTube channels — search uses video search to surface micro-influencers of all sizes
+- [ ] **DIS-02**: Search returns a deduplicated list of channels (by channel ID) sourced from InnerTube video search results
+- [ ] **DIS-03**: Discovered channels display enriched data (top games, genre, median views, email) after the user selects and saves them — show-first / enrich-on-save model (approved in Phase 3 discuss-phase D-04)
+- [ ] **DIS-04**: User can select up to 15 discovered channels and save them to `outreach_channels` in a single action (upsert — no duplicates)
+- [ ] **DIS-05**: Business email is extracted from the channel About page description via regex during enrichment and stored in `outreach_channels.email`
 
 ### Outreach Dashboard
 
@@ -74,10 +75,11 @@
 | ENR-06 | Phase 2 — Enrichment Pipeline | Pending |
 | ENR-07 | Phase 2 — Enrichment Pipeline | Pending |
 | ENR-08 | Phase 2 — Enrichment Pipeline | Pending |
-| DIS-01 | Phase 3 — Channel Discovery | Pending |
-| DIS-02 | Phase 3 — Channel Discovery | Pending |
-| DIS-03 | Phase 3 — Channel Discovery | Pending |
-| DIS-04 | Phase 3 — Channel Discovery | Pending |
+| DIS-01 | Phase 3 — Channel Discovery | Complete |
+| DIS-02 | Phase 3 — Channel Discovery | Complete |
+| DIS-03 | Phase 3 — Channel Discovery | Complete |
+| DIS-04 | Phase 3 — Channel Discovery | Complete |
+| DIS-05 | Phase 3 — Channel Discovery | Complete |
 | DASH-01 | Phase 4 — Outreach Dashboard & Export | Pending |
 | DASH-02 | Phase 4 — Outreach Dashboard & Export | Pending |
 | DASH-03 | Phase 4 — Outreach Dashboard & Export | Pending |

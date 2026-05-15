@@ -42,6 +42,7 @@ interface DiscoveryRow extends DiscoveredChannel {
   topGames?: string[] | null;
   genre?: string | null;
   email?: string | null;
+  medianViews?: number | null;
 }
 
 function fmt(n: number) {
@@ -192,6 +193,14 @@ export default function DiscoveryPanel() {
       enableSorting: false,
     },
     {
+      id: 'medianViews',
+      header: 'Median views',
+      cell: ({ row }) => row.original.medianViews != null
+        ? <span>{fmt(row.original.medianViews)}</span>
+        : <span className="text-gray-500">—</span>,
+      enableSorting: false,
+    },
+    {
       id: 'status',
       header: 'Status',
       cell: ({ row }) => {
@@ -276,6 +285,7 @@ export default function DiscoveryPanel() {
               topGames:        e.topGames,
               genre:           e.genre,
               email:           e.email,
+              medianViews:     e.medianViews,
               subscriberCount: e.subscriberCount ?? r.subscriberCount,
             }
           : {};

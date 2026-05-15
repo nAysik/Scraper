@@ -52,7 +52,7 @@
 **Requirements:** DIS-01, DIS-02, DIS-03, DIS-04, DIS-05
 **Success Criteria:**
 1. Entering a keyword and submitting searches InnerTube for *videos* matching that keyword, then extracts and deduplicates the unique channels behind those results — returning creators of all sizes, not just large channels.
-2. Each discovered channel displays enriched data (top games, genre, median views, business email if found in About page) computed on-the-fly before being shown — no separate enrichment step needed.
+2. Each discovered channel displays enriched data (top games, genre, median views, business email if found in About page) after the user selects and saves — show-first / enrich-on-save model (approved in discuss-phase D-04).
 3. The user can select one or more discovered channels and save them to `outreach_channels` with a single action.
 4. Saving a channel that already exists in `outreach_channels` upserts (no duplicates).
 5. Business email is extracted from the channel's About page description via regex during enrichment and stored in `outreach_channels.email`.
