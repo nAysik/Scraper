@@ -1,8 +1,8 @@
 // src/app/api/outreach/discover/route.ts
-// POST /api/outreach/discover  (Phase 3)
+// POST /api/outreach/discover  (Phase 3, updated Phase 5)
 // Auth-gated keyword-driven channel discovery.
 //
-// Request:  { keyword: string }
+// Request:  { keywords: string[] }  — or legacy { keyword: string }
 // Response: { channels: DiscoveredChannel[] }
 //
 // CONTEXT.md decisions implemented:
@@ -27,27 +27,45 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  const rawKeyword: string = typeof body?.keyword === 'string' ? body.keyword : '';
-  const keyword = rawKeyword.trim();
 
-  if (!keyword) {
-    return NextResponse.json({ error: 'Keyword is required' }, { status: 400 });
+  // Support both { keywords: string[] } (new) and { keyword: string } (legacy backwards-compat).
+  let rawKeywords: string[];
+  if (Array.isArray(body?.keywords)) {
+    rawKeywords = body.keywords;
+  } else if (typeof body?.keyword === 'string') {
+    rawKeywords = [body.keyword];
+  } else {
+    rawKeywords = [];
   }
-  if (keyword.length > MAX_KEYWORD_LEN) {
-    return NextResponse.json({ error: `Keyword too long (max ${MAX_KEYWORD_LEN} chars)` }, { status: 400 });
+
+  const keywords = rawKeywords.map((k: unknown) => (typeof k === 'string' ? k.trim() : '')).filter(Boolean);
+
+  if (keywords.length === 0) {
+    return NextResponse.json({ error: 'At least one keyword is required' }, { status: 400 });
+  }
+  if (keywords.length > 5) {
+    return NextResponse.json({ error: 'Maximum 5 keywords allowed' }, { status: 400 });
+  }
+  const tooLong = keywords.find(k => k.length > MAX_KEYWORD_LEN);
+  if (tooLong) {
+    return NextResponse.json({ error: `Keyword too long (max ${MAX_KEYWORD_LEN} chars): "${tooLong.slice(0, 30)}…"` }, { status: 400 });
   }
 
   try {
-    // Dual search per D-01: relevance + upload_date:'week'. Each runs 5 pages internally.
-    const [relevanceMap, recentMap] = await Promise.all([
-      searchVideosByKeyword(keyword, {}, 5),
-      searchVideosByKeyword(keyword, { upload_date: 'week' }, 5),
-    ]);
+    // Fire all keyword × variant searches in parallel (2 per keyword).
+    const allMaps = await Promise.all(
+      keywords.flatMap(kw => [
+        searchVideosByKeyword(kw, {}, 5),
+        searchVideosByKeyword(kw, { upload_date: 'week' }, 5),
+      ]),
+    );
 
-    // Merge: relevance first, then add channels only found via upload_date:'week'.
-    const merged = new Map<string, DiscoveredChannel>(relevanceMap);
-    for (const [id, channel] of recentMap) {
-      if (!merged.has(id)) merged.set(id, channel);
+    // Merge: iterate each result Map; first-seen entry wins on channelId collision.
+    const merged = new Map<string, DiscoveredChannel>();
+    for (const map of allMaps) {
+      for (const [id, channel] of map) {
+        if (!merged.has(id)) merged.set(id, channel);
+      }
     }
     const channels = Array.from(merged.values());
 
