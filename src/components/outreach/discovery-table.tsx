@@ -53,7 +53,8 @@ function fmt(n: number) {
 }
 
 export default function DiscoveryPanel() {
-  const [keyword, setKeyword] = useState('');
+  const [chips, setChips] = useState<string[]>([]);
+  const [inputValue, setInputValue] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchError, setSearchError] = useState('');
   const [rows, setRows] = useState<DiscoveryRow[]>([]);
@@ -65,10 +66,16 @@ export default function DiscoveryPanel() {
   const [saveError, setSaveError] = useState('');
   const [summary, setSummary] = useState<{ succeeded: number; failed: number; partial: number } | null>(null);
 
+  function commitChip() {
+    const v = inputValue.trim();
+    if (!v || chips.includes(v) || chips.length >= 5) return;
+    setChips(prev => [...prev, v]);
+    setInputValue('');
+  }
+
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    const q = keyword.trim();
-    if (!q || searching) return;
+    if (chips.length === 0 || searching) return;
     setSearching(true);
     setSearchError('');
     setSummary(null);
@@ -77,7 +84,7 @@ export default function DiscoveryPanel() {
       const res = await fetch('/api/outreach/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keyword: q }),
+        body: JSON.stringify({ keywords: chips }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -316,8 +323,8 @@ export default function DiscoveryPanel() {
 
   const searchButtonLabel = searching
     ? 'Searching…'
-    : keyword.trim()
-      ? `Search "${keyword.trim()}"`
+    : chips.length > 0
+      ? `Search ${chips.length} keyword${chips.length === 1 ? '' : 's'}`
       : 'Search channels';
 
   const saveButtonLabel = saving
@@ -331,15 +338,45 @@ export default function DiscoveryPanel() {
       {/* Search form */}
       <form onSubmit={handleSearch} className="flex gap-3 items-end flex-wrap">
         <div className="flex-1 min-w-0">
+          {chips.length > 0 && (
+            <div className="flex flex-wrap gap-1 mb-2">
+              {chips.map(chip => (
+                <span key={chip} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-gray-800 text-sm text-white">
+                  {chip}
+                  <button
+                    type="button"
+                    aria-label={`Remove ${chip}`}
+                    onClick={() => setChips(prev => prev.filter(c => c !== chip))}
+                    className="text-gray-400 hover:text-white leading-none"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+            </div>
+          )}
           <Input
-            value={keyword}
-            onChange={e => setKeyword(e.target.value)}
-            placeholder="e.g. Hades, hades gameplay, cozy games…"
-            disabled={searching}
+            value={inputValue}
+            onChange={e => setInputValue(e.target.value)}
+            onKeyDown={e => {
+              if (e.key === 'Enter') { e.preventDefault(); commitChip(); }
+              if (e.key === 'Tab')   { e.preventDefault(); commitChip(); }
+            }}
+            placeholder={
+              chips.length === 0
+                ? 'e.g. Hades, Hades gameplay, Hades review'
+                : chips.length < 5
+                  ? 'Add another keyword…'
+                  : ''
+            }
+            disabled={searching || chips.length >= 5}
             className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
           />
+          {chips.length > 0 && (
+            <p className="text-xs text-gray-500 mt-1">{chips.length}/5 keywords</p>
+          )}
         </div>
-        <Button type="submit" disabled={!keyword.trim() || searching}>
+        <Button type="submit" disabled={chips.length === 0 || searching}>
           {searching && (
             <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -396,7 +433,7 @@ export default function DiscoveryPanel() {
                   <TableRow>
                     <TableCell colSpan={columns.length} className="text-center text-gray-500 py-8">
                       {rows.length === 0
-                        ? 'No channels found for that keyword. Try a different search.'
+                        ? 'No channels found for those keywords. Try different or broader terms.'
                         : 'No channels match the current filter. Try increasing the max-subscribers limit.'}
                     </TableCell>
                   </TableRow>
