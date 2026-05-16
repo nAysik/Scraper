@@ -1,8 +1,8 @@
 # Roadmap: YouTube Scraper — Outreach Edition
 
-**Milestone:** Outreach workflow v1
+**Milestone:** Coverage & Email Expansion v2.0
 **Granularity:** Standard
-**Coverage:** 17/17 v1 requirements mapped
+**Coverage:** 17/17 v1 requirements (complete) + 10/10 v2.0 requirements mapped
 
 ---
 
@@ -12,6 +12,9 @@
 - [x] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
 - [x] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
 - [x] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
+- [ ] **Phase 5: Multi-Keyword Sweep** — Replace single keyword input with chip input; search up to 5 keywords in parallel; merge and dedup results
+- [ ] **Phase 6: Website Email Enrichment** — Follow website links from YouTube About page during enrichment to extract additional email addresses
+- [ ] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge
 
 ---
 
@@ -79,6 +82,43 @@
 
 ---
 
+### Phase 5: Multi-Keyword Sweep
+**Goal:** The "Discover channels" tab accepts up to 5 keywords as removable chips. Submitting runs the existing dual-variant InnerTube search for every keyword in parallel, merges all results into one deduplicated channel list, and displays them in the existing table with all existing filters intact.
+**Depends on:** Phase 3
+**Requirements:** COV-01, COV-02, COV-03
+**Success Criteria:**
+1. The keyword input field is replaced by a chip input — typing a keyword and pressing Enter adds it as a chip; chips can be removed via ×; max 5 chips.
+2. Submitting with 3 chips runs 6 parallel InnerTube searches (3 keywords × 2 variants) and returns a merged, deduplicated channel list.
+3. The subscriber filter, already-saved badge, and save flow work identically on the merged result set.
+**Plans:** TBD
+**UI hint**: yes
+
+### Phase 6: Website Email Enrichment
+**Goal:** The enrichment pipeline follows website links found in a channel's YouTube About social links and extracts email addresses from the fetched page HTML, increasing email yield without requiring new credentials or changing the enrichment UX.
+**Depends on:** Phase 2
+**Requirements:** EML-01, EML-02, EML-03
+**Success Criteria:**
+1. Enriching a channel that has a website link but no YouTube About email attempts to fetch the website and extract an email.
+2. Social platform URLs (twitter.com, instagram.com, twitch.tv, tiktok.com, facebook.com, youtube.com) are skipped.
+3. If the website fetch times out (>5 seconds), errors, or returns no email, enrichment completes normally with no error surfaced to the user.
+**Plans:** TBD
+
+### Phase 7: Twitch Discovery
+**Goal:** A "Discover on Twitch" tab lets the user search live Twitch streamers by game name, view up to 100 results with live viewer counts and bio-extracted emails, and save selected streamers to the unified outreach_channels table with platform='twitch'. The Outreach List and CSV export show a Platform column distinguishing YouTube from Twitch entries.
+**Depends on:** Phase 4 (Outreach List), Phase 5 (schema pattern)
+**Requirements:** TWI-01, TWI-02, TWI-03, TWI-04, TWI-05, TWI-06, TWI-07
+**Success Criteria:**
+1. Migration 006 adds `platform text DEFAULT 'youtube'` to `outreach_channels`; all existing rows retain 'youtube'; `(youtube_id, platform)` uniqueness is enforced.
+2. The "Discover on Twitch" tab appears as the 4th tab in OutreachTabs.
+3. Searching by game name (e.g. "Hades") returns live Twitch streamers with display name, Twitch link, live viewer count, and email (if found in bio).
+4. Saving selected Twitch channels upserts them to `outreach_channels` with `platform='twitch'` — no enrichment step needed (bio data used directly).
+5. The Outreach List shows a Platform badge (YouTube / Twitch) for every row; Twitch rows have no Re-enrich button.
+6. The CSV export includes a Platform column.
+**Plans:** TBD
+**UI hint**: yes
+
+---
+
 ## Progress Table
 
 | Phase | Plans Complete | Status | Completed |
@@ -87,3 +127,6 @@
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
 | 4. Outreach Dashboard & Export | 2/2 | Complete | 2026-05-15 |
+| 5. Multi-Keyword Sweep | 0/0 | Not started | — |
+| 6. Website Email Enrichment | 0/0 | Not started | — |
+| 7. Twitch Discovery | 0/0 | Not started | — |

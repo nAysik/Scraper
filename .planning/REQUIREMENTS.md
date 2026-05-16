@@ -42,14 +42,38 @@
 - [ ] **EXP-01**: User can download all outreach channels as a CSV file
 - [ ] **EXP-02**: CSV includes all table columns in a format ready for Notion import
 
-## v2 Requirements
+## v2.0 Requirements
 
-### Future Enhancements
+### Coverage
 
-- **V2-01**: Outreach status tracking (contacted / replied / passed) within the app
-- **V2-02**: Notion API push integration (direct sync instead of CSV)
-- **V2-03**: Bulk re-enrichment cron job to keep data fresh
-- **V2-04**: Similarity search — find channels similar to ones already in the outreach list
+- [ ] **COV-01**: The "Discover channels" tab accepts multiple keywords (up to 5) entered as removable chips
+- [ ] **COV-02**: Searching runs dual-variant InnerTube searches (relevance + recent-week) for all keywords in parallel, 5 pages each
+- [ ] **COV-03**: Results from all keyword searches are merged and deduplicated by channel ID before display
+
+### Email Enrichment
+
+- [ ] **EML-01**: During enrichment, if a channel's social links include a website URL, the pipeline fetches that page and extracts an email address via regex
+- [ ] **EML-02**: The website fetch has a 5-second timeout and fails silently — enrichment completes normally if the fetch fails or returns no email
+- [ ] **EML-03**: Social platform URLs (youtube.com, twitter.com, instagram.com, twitch.tv, tiktok.com, facebook.com) are skipped and not fetched
+
+### Twitch Discovery
+
+- [ ] **TWI-01**: `outreach_channels` table gains a `platform text DEFAULT 'youtube'` column (Migration 006); existing rows get 'youtube'; `(youtube_id, platform)` is a unique pair
+- [ ] **TWI-02**: A "Discover on Twitch" tab is added to OutreachTabs (4th tab)
+- [ ] **TWI-03**: Searching by game name returns up to 100 live Twitch streamers with display name, Twitch URL, live viewer count, and email extracted from bio
+- [ ] **TWI-04**: Selected Twitch streamers (up to 15) can be saved to `outreach_channels` with `platform='twitch'` in a single action
+- [ ] **TWI-05**: The Outreach List table shows a Platform column (YouTube / Twitch badge) for all rows
+- [ ] **TWI-06**: The CSV export includes a Platform column
+- [ ] **TWI-07**: The Re-enrich button is hidden for rows with `platform='twitch'`
+
+### Deferred (future milestones)
+
+- Outreach status tracking (contacted / replied / passed) — managed in Notion
+- Notion API push integration — CSV export is sufficient
+- Bulk re-enrichment cron job
+- Similarity search (find channels similar to ones in the outreach list)
+- Twitch follower count (requires per-user API call; viewer count sufficient for v1)
+- Twitch-to-YouTube cross-reference
 
 ## Out of Scope
 
@@ -57,33 +81,47 @@
 |---------|--------|
 | Outreach status tracking | Managed in Notion; no need to duplicate |
 | Notion API integration | CSV export is sufficient; avoids Notion token setup |
-| Non-YouTube platforms | YouTube-only for now |
 | Mixing with existing outlier channels table | Different data models and lifecycles |
 | Subscriber size filter on discovery | All sizes are relevant for this use case |
+| Linktree scraping | Website fetch covers the general case |
+| Twitch VOD history / non-live discovery | Live streams sufficient for v1 |
 
 ## Traceability
 
 | Requirement | Phase | Status |
 |-------------|-------|--------|
-| DB-01 | Phase 1 — Database Foundation | Pending |
-| DB-02 | Phase 1 — Database Foundation | Pending |
-| ENR-01 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-02 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-03 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-04 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-05 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-06 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-07 | Phase 2 — Enrichment Pipeline | Pending |
-| ENR-08 | Phase 2 — Enrichment Pipeline | Pending |
+| DB-01 | Phase 1 — Database Foundation | Complete |
+| DB-02 | Phase 1 — Database Foundation | Complete |
+| ENR-01 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-02 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-03 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-04 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-05 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-06 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-07 | Phase 2 — Enrichment Pipeline | Complete |
+| ENR-08 | Phase 2 — Enrichment Pipeline | Complete |
 | DIS-01 | Phase 3 — Channel Discovery | Complete |
 | DIS-02 | Phase 3 — Channel Discovery | Complete |
 | DIS-03 | Phase 3 — Channel Discovery | Complete |
 | DIS-04 | Phase 3 — Channel Discovery | Complete |
 | DIS-05 | Phase 3 — Channel Discovery | Complete |
 | DASH-01 | Phase 4 — Outreach Dashboard & Export | Complete |
-| DASH-02 | Phase 4 — Outreach Dashboard & Export | Pending |
-| DASH-03 | Phase 4 — Outreach Dashboard & Export | Pending |
+| DASH-02 | Phase 4 — Outreach Dashboard & Export | Complete |
+| DASH-03 | Phase 4 — Outreach Dashboard & Export | Complete |
 | DASH-04 | Phase 4 — Outreach Dashboard & Export | Complete |
 | DASH-05 | Phase 4 — Outreach Dashboard & Export | Complete |
-| EXP-01 | Phase 4 — Outreach Dashboard & Export | Pending |
-| EXP-02 | Phase 4 — Outreach Dashboard & Export | Pending |
+| EXP-01 | Phase 4 — Outreach Dashboard & Export | Complete |
+| EXP-02 | Phase 4 — Outreach Dashboard & Export | Complete |
+| COV-01 | Phase 5 — Multi-Keyword Sweep | Pending |
+| COV-02 | Phase 5 — Multi-Keyword Sweep | Pending |
+| COV-03 | Phase 5 — Multi-Keyword Sweep | Pending |
+| EML-01 | Phase 6 — Website Email Enrichment | Pending |
+| EML-02 | Phase 6 — Website Email Enrichment | Pending |
+| EML-03 | Phase 6 — Website Email Enrichment | Pending |
+| TWI-01 | Phase 7 — Twitch Discovery | Pending |
+| TWI-02 | Phase 7 — Twitch Discovery | Pending |
+| TWI-03 | Phase 7 — Twitch Discovery | Pending |
+| TWI-04 | Phase 7 — Twitch Discovery | Pending |
+| TWI-05 | Phase 7 — Twitch Discovery | Pending |
+| TWI-06 | Phase 7 — Twitch Discovery | Pending |
+| TWI-07 | Phase 7 — Twitch Discovery | Pending |
