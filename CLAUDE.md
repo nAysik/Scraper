@@ -29,6 +29,8 @@ Copy `.env.local` and fill in all keys before running anything:
 | `OPENAI_API_KEY` | OpenAI gpt-4o-mini for outreach game/genre extraction |
 | `CRON_SECRET` | Bearer token protecting cron endpoints |
 | `PROXY_URL` | Optional residential proxy for InnerTube requests |
+| `TWITCH_CLIENT_ID`     | Twitch app client ID for the Discover on Twitch feature (Phase 7) |
+| `TWITCH_CLIENT_SECRET` | Twitch app client secret — server-only, never exposed to browser  |
 
 ## Database
 
@@ -75,7 +77,7 @@ POST /api/outreach/enrich {text}    # newline-separated URLs, max 15
   → fetchChannelData()               # InnerTube getChannel + getAbout + last 10 videos
   → medianViews()                    # pure: middle / avg-of-two-middle
   → extractGamesGenre()              # OpenAI gpt-4o-mini, structured output, single call
-  → upsertOutreachChannel()          # service role, onConflict: youtube_id
+  → upsertOutreachChannel()          # service role, onConflict: youtube_id,platform
 
 Response: { succeeded: number, failed: [{url,reason}], partial: [{url,reason}] }
 ```

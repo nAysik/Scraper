@@ -7,10 +7,11 @@
 //     ARCHITECTURE.md §Anti-Patterns line 217); new code uses the canonical helper.
 //
 // Conflict key:
-//   - migration 004 has BOTH youtube_id and url as unique. Upsert specifies onConflict: 'youtube_id'.
-//   - When the same channel is re-pasted with a different URL form (canonicalisation differences,
-//     casing, etc.), youtube_id resolves the conflict and the row's `url` is overwritten with
-//     the new canonical form. RESEARCH Pitfall 3 confirms this is the desired behaviour.
+//   - migration 004 has BOTH youtube_id and url as unique. Originally onConflict: 'youtube_id'.
+//   - migration 006 (Phase 7) replaces the single-column youtube_id unique constraint with a
+//     composite (youtube_id, platform) unique constraint to support multi-platform rows.
+//     onConflict is now 'youtube_id,platform'. Existing YouTube callers that omit platform
+//     default to 'youtube' and continue to work without change.
 
 import { createServiceClient } from '@/lib/supabase/server';
 
@@ -24,6 +25,7 @@ export interface OutreachUpsertRow {
   email: string | null;
   medianViews: number | null;
   lastEnrichedAt: string;   // ISO 8601 timestamp
+  platform?: string;        // 'youtube' (default) | 'twitch'
 }
 
 export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<void> {
@@ -41,8 +43,9 @@ export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<voi
         email:            row.email,
         median_views:     row.medianViews,
         last_enriched_at: row.lastEnrichedAt,
+        platform:         row.platform ?? 'youtube',
       },
-      { onConflict: 'youtube_id' },
+      { onConflict: 'youtube_id,platform' },
     );
   if (error) throw new Error(`upsertOutreachChannel: ${error.message}`);
 }
