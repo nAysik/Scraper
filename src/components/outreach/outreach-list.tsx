@@ -32,6 +32,7 @@ interface OutreachRow {
   medianViews: number | null;
   lastEnrichedAt: string | null;
   email: string | null;
+  platform: string;
   status: OutreachRowStatus;
 }
 
@@ -62,6 +63,7 @@ export default function OutreachList() {
         if (cancelled) return;
         const list: OutreachRow[] = (data.channels ?? []).map((c: Omit<OutreachRow, 'status'>) => ({
           ...c,
+          platform: (c as OutreachRow).platform ?? 'youtube',
           status: 'idle' as OutreachRowStatus,
         }));
         setRows(list);
@@ -256,22 +258,32 @@ export default function OutreachList() {
       enableSorting: false,
     },
     {
+      id: 'platform',
+      header: 'Platform',
+      cell: ({ row }) => row.original.platform === 'twitch'
+        ? <Badge variant="secondary" className="text-purple-400">Twitch</Badge>
+        : <Badge variant="secondary">YouTube</Badge>,
+      enableSorting: false,
+    },
+    {
       id: 'actions',
       header: '',
       cell: ({ row }) => {
         const enriching = row.original.status === 'enriching';
         return (
           <div className="flex gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              disabled={enriching}
-              onClick={() => handleReenrich(row.original)}
-            >
-              {enriching
-                ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Enriching…</>
-                : <><RefreshCw className="h-4 w-4 mr-1" />Re-enrich</>}
-            </Button>
+            {row.original.platform !== 'twitch' && (
+              <Button
+                size="sm"
+                variant="outline"
+                disabled={enriching}
+                onClick={() => handleReenrich(row.original)}
+              >
+                {enriching
+                  ? <><Loader2 className="h-4 w-4 animate-spin mr-1" />Enriching…</>
+                  : <><RefreshCw className="h-4 w-4 mr-1" />Re-enrich</>}
+              </Button>
+            )}
             <Button
               size="sm"
               variant="destructive"
@@ -302,7 +314,7 @@ export default function OutreachList() {
 
   // Declared AFTER `table` so it can reference table.getRowModel()
   function handleExportCsv() {
-    const headers = ['Channel name', 'URL', 'Subscribers', 'Top games', 'Genre', 'Median views', 'Last enriched', 'Email'];
+    const headers = ['Channel name', 'URL', 'Subscribers', 'Top games', 'Genre', 'Median views', 'Last enriched', 'Email', 'Platform'];
     const escapeCell = (v: string) => `"${v.replace(/"/g, '""')}"`;
     const rowsData = table.getRowModel().rows.map(r => {
       const o = r.original;
@@ -315,6 +327,7 @@ export default function OutreachList() {
         o.medianViews?.toString() ?? '',
         o.lastEnrichedAt ? new Date(o.lastEnrichedAt).toLocaleDateString() : '',
         o.email ?? '',
+        o.platform ?? 'youtube',
       ].map(escapeCell).join(',');
     });
     const csv = [headers.map(escapeCell).join(','), ...rowsData].join('\n');
