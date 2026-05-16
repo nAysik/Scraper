@@ -3,7 +3,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
-import { searchTwitchStreamers } from '@/lib/twitch/search';
+import { searchTwitchStreamers, searchTwitchClips } from '@/lib/twitch/search';
 
 export const maxDuration = 60;
 
@@ -15,12 +15,14 @@ export async function POST(request: NextRequest) {
 
   // Parse and validate body
   let game: string;
+  let mode: 'live' | 'clips';
   try {
-    const body = await request.json() as { game?: unknown };
+    const body = await request.json() as { game?: unknown; mode?: unknown };
     if (typeof body.game !== 'string' || !body.game.trim()) {
       return NextResponse.json({ error: 'game is required' }, { status: 400 });
     }
     game = body.game.trim().slice(0, 200);
+    mode = body.mode === 'clips' ? 'clips' : 'live';
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
@@ -28,7 +30,9 @@ export async function POST(request: NextRequest) {
   // Search Twitch
   let channels;
   try {
-    channels = await searchTwitchStreamers(game);
+    channels = mode === 'clips'
+      ? await searchTwitchClips(game)
+      : await searchTwitchStreamers(game);
   } catch (err) {
     const message = err instanceof Error ? err.message : 'Twitch search failed';
     return NextResponse.json({ error: message }, { status: 502 });

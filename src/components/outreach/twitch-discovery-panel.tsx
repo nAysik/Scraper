@@ -46,6 +46,7 @@ function fmt(n: number) {
 
 export default function TwitchDiscoveryPanel() {
   const [game, setGame]               = useState('');
+  const [mode, setMode]               = useState<'live' | 'clips'>('live');
   const [searching, setSearching]     = useState(false);
   const [searchError, setSearchError] = useState('');
   const [rows, setRows]               = useState<TwitchRow[]>([]);
@@ -69,7 +70,7 @@ export default function TwitchDiscoveryPanel() {
       const res = await fetch('/api/outreach/discover-twitch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ game: trimmed }),
+        body: JSON.stringify({ game: trimmed, mode }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -150,7 +151,7 @@ export default function TwitchDiscoveryPanel() {
     },
     {
       accessorKey: 'viewerCount',
-      header: 'Live viewers',
+      header: mode === 'clips' ? 'Top clip views' : 'Live viewers',
       cell: ({ row }) => <span>{fmt(row.original.viewerCount)}</span>,
     },
     {
@@ -175,7 +176,7 @@ export default function TwitchDiscoveryPanel() {
       },
       enableSorting: false,
     },
-  ], [saving]);
+  ], [saving, mode]);
 
   const table = useReactTable({
     data: filtered,
@@ -245,6 +246,24 @@ export default function TwitchDiscoveryPanel() {
 
   return (
     <div className="space-y-4">
+      {/* Mode toggle */}
+      <div className="flex gap-1 w-fit rounded-md border border-gray-700 p-0.5 bg-gray-900">
+        <button
+          type="button"
+          onClick={() => { setMode('live'); setRows([]); setSearched(false); }}
+          className={`px-3 py-1 text-sm rounded transition-colors ${mode === 'live' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+        >
+          Live now
+        </button>
+        <button
+          type="button"
+          onClick={() => { setMode('clips'); setRows([]); setSearched(false); }}
+          className={`px-3 py-1 text-sm rounded transition-colors ${mode === 'clips' ? 'bg-gray-700 text-white' : 'text-gray-400 hover:text-gray-200'}`}
+        >
+          Recent clips
+        </button>
+      </div>
+
       {/* Search form */}
       <form onSubmit={handleSearch} className="flex gap-3 items-end flex-wrap">
         <div className="flex-1 min-w-0">
@@ -273,7 +292,7 @@ export default function TwitchDiscoveryPanel() {
         <div className="space-y-3">
           {/* Filter row */}
           <div className="flex items-center gap-3 flex-wrap">
-            <label className="text-xs text-gray-400 whitespace-nowrap">Max live viewers</label>
+            <label className="text-xs text-gray-400 whitespace-nowrap">{mode === 'clips' ? 'Max clip views' : 'Max live viewers'}</label>
             <Input
               type="number"
               placeholder="e.g. 5000"
