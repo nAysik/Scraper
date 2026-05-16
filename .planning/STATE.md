@@ -3,13 +3,13 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-last_updated: "2026-05-16T15:56:45.506Z"
+last_updated: "2026-05-16T17:07:33.614Z"
 last_activity: "2026-05-16 — Phase 5 plan 02 complete: keyword chip input in DiscoveryPanel"
 progress:
   total_phases: 7
-  completed_phases: 5
-  total_plans: 13
-  completed_plans: 13
+  completed_phases: 6
+  total_plans: 14
+  completed_plans: 14
   percent: 100
 ---
 
@@ -31,14 +31,14 @@ See: .planning/PROJECT.md
 | 3 | Channel Discovery | Complete | 3/3 |
 | 4 | Outreach Dashboard & Export | Complete | 2/2 |
 | 5 | Multi-Keyword Sweep | Complete | 2/2 |
-| 6 | Website Email Enrichment | Not started | 0 |
+| 6 | Website Email Enrichment | In Progress | 1/1 |
 | 7 | Twitch Discovery | Not started | 0 |
 
 ## Current Position
 
-**Active phase:** 5 — Multi-Keyword Sweep (complete)
-**Active plan:** 05-02 complete
-**Overall progress:** 5/7 phases complete (v1 milestone done, v2.0 in progress)
+**Active phase:** 6 — Website Email Enrichment (in progress)
+**Active plan:** 06-01 complete
+**Overall progress:** 5/7 phases complete, Phase 6 plan 1/1 done
 
 ## Performance Metrics
 
@@ -59,6 +59,7 @@ See: .planning/PROJECT.md
 - CSV export over Notion API — simpler, no token setup required
 - New Outreach tab in existing dashboard — reuses auth and nav already in place
 - Accept keywords[] array with legacy keyword string fallback in discover route; max 5 keywords; first-seen-wins merge
+- Website email fallback: fetch first non-social primary_link from About page with 5s AbortController timeout; SOCIAL_SKIP blocks youtube/twitter/x/instagram/twitch/tiktok/facebook; YouTube redirect unwrapped via q param; failures are silent
 
 ### Architecture Notes
 
@@ -79,5 +80,5 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-**Last activity:** 2026-05-16 — Phase 5 plan 02 complete: keyword chip input in DiscoveryPanel
-**Next action:** Execute Phase 6 (Website Email Enrichment) or Phase 7 (Twitch Discovery)
+**Last activity:** 2026-05-16 — Phase 6 plan 01 complete: website email enrichment via About page primary_links
+**Next action:** Execute Phase 7 (Twitch Discovery) or additional Phase 6 plans if any
