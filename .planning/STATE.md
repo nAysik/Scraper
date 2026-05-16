@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v1.0
 milestone_name: milestone
 status: ready_to_plan
-last_updated: "2026-05-16T17:07:33.614Z"
-last_activity: "2026-05-16 — Phase 5 plan 02 complete: keyword chip input in DiscoveryPanel"
+last_updated: "2026-05-16T00:00:00.000Z"
+last_activity: "2026-05-16 — Phase 7 plan 01 complete: platform column migration, upsert update, Twitch env docs"
 progress:
   total_phases: 7
   completed_phases: 6
-  total_plans: 14
-  completed_plans: 14
-  percent: 100
+  total_plans: 17
+  completed_plans: 16
+  percent: 94
 ---
 
 # Project State
@@ -32,13 +32,13 @@ See: .planning/PROJECT.md
 | 4 | Outreach Dashboard & Export | Complete | 2/2 |
 | 5 | Multi-Keyword Sweep | Complete | 2/2 |
 | 6 | Website Email Enrichment | In Progress | 1/1 |
-| 7 | Twitch Discovery | Not started | 0 |
+| 7 | Twitch Discovery | In Progress | 1/3 |
 
 ## Current Position
 
-**Active phase:** 6 — Website Email Enrichment (in progress)
-**Active plan:** 06-01 complete
-**Overall progress:** 5/7 phases complete, Phase 6 plan 1/1 done
+**Active phase:** 7 — Twitch Discovery (in progress)
+**Active plan:** 07-01 complete
+**Overall progress:** 6/7 phases complete, Phase 7 plan 1/3 done
 
 ## Performance Metrics
 
@@ -60,6 +60,7 @@ See: .planning/PROJECT.md
 - New Outreach tab in existing dashboard — reuses auth and nav already in place
 - Accept keywords[] array with legacy keyword string fallback in discover route; max 5 keywords; first-seen-wins merge
 - Website email fallback: fetch first non-social primary_link from About page with 5s AbortController timeout; SOCIAL_SKIP blocks youtube/twitter/x/instagram/twitch/tiktok/facebook; YouTube redirect unwrapped via q param; failures are silent
+- platform defaults to 'youtube' in outreach upsert so all existing callers are backward-compatible; composite unique (youtube_id, platform) enables Twitch rows to coexist
 
 ### Architecture Notes
 
@@ -80,5 +81,5 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-**Last activity:** 2026-05-16 — Phase 6 plan 01 complete: website email enrichment via About page primary_links
-**Next action:** Execute Phase 7 (Twitch Discovery) or additional Phase 6 plans if any
+**Last activity:** 2026-05-16 — Phase 7 plan 01 complete: platform column migration, upsert update, Twitch env docs
+**Next action:** Execute Phase 7 plan 02 (Twitch channel search + upsert API)
