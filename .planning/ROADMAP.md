@@ -14,7 +14,7 @@
 - [x] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
 - [ ] **Phase 5: Multi-Keyword Sweep** — Replace single keyword input with chip input; search up to 5 keywords in parallel; merge and dedup results
 - [ ] **Phase 6: Website Email Enrichment** — Follow website links from YouTube About page during enrichment to extract additional email addresses
-- [ ] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge
+- [x] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge (completed 2026-05-16)
 
 ---
 
@@ -90,7 +90,9 @@
 1. The keyword input field is replaced by a chip input — typing a keyword and pressing Enter adds it as a chip; chips can be removed via ×; max 5 chips.
 2. Submitting with 3 chips runs 6 parallel InnerTube searches (3 keywords × 2 variants) and returns a merged, deduplicated channel list.
 3. The subscriber filter, already-saved badge, and save flow work identically on the merged result set.
-**Plans:** TBD
+**Plans:** 2 plans
+- [ ] 05-01-PLAN.md — Update /api/outreach/discover to accept keywords[] array with parallel multi-keyword search
+- [ ] 05-02-PLAN.md — Chip input UI in DiscoveryPanel replacing single keyword Input
 **UI hint**: yes
 
 ### Phase 6: Website Email Enrichment
@@ -101,7 +103,8 @@
 1. Enriching a channel that has a website link but no YouTube About email attempts to fetch the website and extract an email.
 2. Social platform URLs (twitter.com, instagram.com, twitch.tv, tiktok.com, facebook.com, youtube.com) are skipped.
 3. If the website fetch times out (>5 seconds), errors, or returns no email, enrichment completes normally with no error surfaced to the user.
-**Plans:** TBD
+**Plans:** 1 plan
+- [ ] 06-01-PLAN.md — Add website email extraction to fetch-channel-data.ts; use as fallback in enrich route
 
 ### Phase 7: Twitch Discovery
 **Goal:** A "Discover on Twitch" tab lets the user search live Twitch streamers by game name, view up to 100 results with live viewer counts and bio-extracted emails, and save selected streamers to the unified outreach_channels table with platform='twitch'. The Outreach List and CSV export show a Platform column distinguishing YouTube from Twitch entries.
@@ -114,7 +117,10 @@
 4. Saving selected Twitch channels upserts them to `outreach_channels` with `platform='twitch'` — no enrichment step needed (bio data used directly).
 5. The Outreach List shows a Platform badge (YouTube / Twitch) for every row; Twitch rows have no Re-enrich button.
 6. The CSV export includes a Platform column.
-**Plans:** TBD
+**Plans:** 3/3 plans complete
+- [x] 07-01-PLAN.md — Migration 006 (platform column, composite unique) + upsert update + CLAUDE.md env vars
+- [x] 07-02-PLAN.md — Twitch API lib (client.ts, search.ts) + discover-twitch + save-twitch routes
+- [x] 07-03-PLAN.md — TwitchDiscoveryPanel UI + OutreachTabs 4th tab + Outreach List platform column/CSV/Re-enrich guard
 **UI hint**: yes
 
 ---
@@ -127,6 +133,6 @@
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
 | 4. Outreach Dashboard & Export | 2/2 | Complete | 2026-05-15 |
-| 5. Multi-Keyword Sweep | 0/0 | Not started | — |
-| 6. Website Email Enrichment | 0/0 | Not started | — |
-| 7. Twitch Discovery | 0/0 | Not started | — |
+| 5. Multi-Keyword Sweep | 0/2 | In progress | — |
+| 6. Website Email Enrichment | 0/1 | Not started | — |
+| 7. Twitch Discovery | 3/3 | Complete   | 2026-05-16 |
