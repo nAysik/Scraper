@@ -27,6 +27,40 @@ export interface OutreachChannelData {
   description: string;
   videos: VideoMeta[];
   playlists: PlaylistMeta[];
+  websiteEmail: string | null;
+}
+
+// Email extraction (Phase 3 D-12).
+// Regex pre-chosen in CONTEXT.md: covers business addresses like
+// `business@studio.dev`, `team+inbox@label.co`. First match wins.
+// Returns null when the description has no parseable email.
+const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
+
+// Social platforms to skip when walking primary_links (EML-02).
+// Hostname is matched exactly (via new URL().hostname) — not substring — to prevent bypass.
+const SOCIAL_SKIP = new Set([
+  'youtube.com', 'www.youtube.com',
+  'twitter.com', 'x.com',
+  'instagram.com', 'www.instagram.com',
+  'twitch.tv', 'www.twitch.tv',
+  'tiktok.com', 'www.tiktok.com',
+  'facebook.com', 'www.facebook.com',
+]);
+
+// YouTube wraps external links through /redirect?q=<url>. Unwrap before hostname check.
+function unwrapYouTubeRedirect(raw: string): string {
+  try {
+    const u = new URL(raw.startsWith('http') ? raw : `https://www.youtube.com${raw}`);
+    if (
+      (u.hostname === 'www.youtube.com' || u.hostname === 'youtube.com') &&
+      u.pathname === '/redirect'
+    ) {
+      return decodeURIComponent(u.searchParams.get('q') ?? '') || raw;
+    }
+    return raw;
+  } catch {
+    return raw;
+  }
 }
 
 async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelData> {
@@ -39,9 +73,11 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   // About / description: getAbout() returns ChannelAboutFullMetadata | AboutChannel
   // (Channel.d.ts line 88-90; both shapes verified in d.ts files).
   // Defensive chain handles both shapes plus a final fallback to channel.metadata.description.
+  // `about` is hoisted so the website-fetch block below can read primary_links.
   let description = '';
+  let about: any = null;
   try {
-    const about = (await channel.getAbout()) as any;
+    about = (await channel.getAbout()) as any;
     description =
       about?.description?.toString?.() ??
       about?.metadata?.description ??
@@ -51,6 +87,41 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   }
   if (!description) {
     description = (channel.metadata as any)?.description ?? '';
+  }
+
+  // Website email fallback (EML-01, EML-02, EML-03).
+  // Walks primary_links from the About page; skips social platforms; fetches the
+  // first qualifying URL with a 5-second timeout; runs EMAIL_RE on the HTML.
+  // All failures are silent — website fetch never blocks enrichment.
+  let websiteEmail: string | null = null;
+  try {
+    const primaryLinks: any[] = (about as any)?.primary_links ?? [];
+    for (const link of primaryLinks) {
+      const raw: string = (link as any)?.endpoint?.metadata?.url ?? '';
+      if (!raw) continue;
+      const target = unwrapYouTubeRedirect(raw);
+      if (!target) continue;
+      let hostname = '';
+      try { hostname = new URL(target).hostname; } catch { continue; }
+      if (SOCIAL_SKIP.has(hostname)) continue;
+      // Found a qualifying website URL — fetch it.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000);
+      try {
+        const res = await fetch(target, {
+          signal: controller.signal,
+          headers: { 'User-Agent': 'Mozilla/5.0' },
+        });
+        const html = await res.text();
+        const match = html.match(EMAIL_RE);
+        if (match) websiteEmail = match[0];
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      break; // only try the first qualifying link
+    }
+  } catch {
+    // silent — website fetch failure never blocks enrichment
   }
 
   // Last 10 videos with NO date cutoff (CONTEXT.md D-12, RESEARCH Pitfall 4).
@@ -150,14 +221,8 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   // Reuse existing helper (verified src/lib/scraper/shorts.ts line 64).
   const subscriberCount = await getChannelSubscriberCount(channelId);
 
-  return { name, subscriberCount, description, videos, playlists };
+  return { name, subscriberCount, description, videos, playlists, websiteEmail };
 }
-
-// Email extraction (Phase 3 D-12).
-// Regex pre-chosen in CONTEXT.md: covers business addresses like
-// `business@studio.dev`, `team+inbox@label.co`. First match wins.
-// Returns null when the description has no parseable email.
-const EMAIL_RE = /[\w.+-]+@[\w-]+\.[a-z]{2,}/i;
 
 export function extractEmail(description: string): string | null {
   if (!description) return null;

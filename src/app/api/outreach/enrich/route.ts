@@ -74,7 +74,7 @@ export async function POST(request: NextRequest) {
         const extracted = await extractGamesGenre(data.videos, data.description, data.playlists)
           .catch(() => null);
 
-        const email = extractEmail(data.description);
+        const email = extractEmail(data.description) ?? data.websiteEmail ?? null;
 
         enriched[raw] = {
           topGames:        extracted?.games ?? null,
