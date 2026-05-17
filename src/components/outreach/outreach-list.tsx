@@ -55,6 +55,8 @@ export default function OutreachList() {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'lastEnrichedAt', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [toolbarError, setToolbarError] = useState('');
+  const [editingEmailId, setEditingEmailId]   = useState<string | null>(null);
+  const [editingEmailVal, setEditingEmailVal] = useState('');
   const [reEnrichingAll, setReEnrichingAll] = useState(false);
   const [reEnrichAllProgress, setReEnrichAllProgress] = useState<{ current: number; total: number } | null>(null);
 
@@ -332,9 +334,56 @@ export default function OutreachList() {
     {
       id: 'email',
       header: 'Email',
-      cell: ({ row }) => row.original.email
-        ? <a href={`mailto:${row.original.email}`} className="text-blue-400 hover:underline font-mono text-xs">{row.original.email}</a>
-        : <span className="text-gray-500">—</span>,
+      cell: ({ row }) => {
+        const id = row.original.youtubeId;
+        if (editingEmailId === id) {
+          return (
+            <input
+              autoFocus
+              type="email"
+              value={editingEmailVal}
+              onChange={e => setEditingEmailVal(e.target.value)}
+              onBlur={async () => {
+                const newEmail = editingEmailVal.trim();
+                setEditingEmailId(null);
+                if (newEmail === (row.original.email ?? '')) return;
+                const res = await fetch(`/api/outreach/channels/${encodeURIComponent(id)}`, {
+                  method: 'PATCH',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ email: newEmail || null }),
+                });
+                if (res.ok) {
+                  setRows(prev => prev.map(r => r.youtubeId === id ? { ...r, email: newEmail || null } : r));
+                }
+              }}
+              onKeyDown={e => {
+                if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+                if (e.key === 'Escape') { setEditingEmailId(null); }
+              }}
+              className="bg-gray-800 border border-gray-600 text-white text-xs rounded px-2 py-0.5 w-48 font-mono focus:outline-none focus:border-gray-400"
+            />
+          );
+        }
+        return row.original.email
+          ? (
+            <button
+              type="button"
+              onClick={() => { setEditingEmailId(id); setEditingEmailVal(row.original.email ?? ''); }}
+              className="text-blue-400 hover:underline font-mono text-xs text-left"
+            >
+              {row.original.email}
+            </button>
+          )
+          : (
+            <button
+              type="button"
+              onClick={() => { setEditingEmailId(id); setEditingEmailVal(''); }}
+              className="text-gray-600 hover:text-gray-400 text-xs italic"
+            >
+              Add email
+            </button>
+          );
+      },
       enableSorting: false,
     },
     {
@@ -377,7 +426,7 @@ export default function OutreachList() {
       },
       enableSorting: false,
     },
-  ], [handleReenrich, handleDelete]);
+  ], [handleReenrich, handleDelete, editingEmailId, editingEmailVal]);
 
   const table = useReactTable({
     data: filtered,

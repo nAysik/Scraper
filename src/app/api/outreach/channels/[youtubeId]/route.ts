@@ -1,6 +1,28 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient, createServiceClient } from '@/lib/supabase/server';
 
+export async function PATCH(
+  request: NextRequest,
+  { params }: { params: Promise<{ youtubeId: string }> },
+) {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  const { youtubeId } = await params;
+  const body = await request.json().catch(() => ({}));
+  const email: string | null = typeof body.email === 'string' ? body.email.trim() || null : null;
+
+  const service = createServiceClient();
+  const { error } = await service
+    .from('outreach_channels')
+    .update({ email })
+    .eq('youtube_id', youtubeId);
+
+  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  return NextResponse.json({ email });
+}
+
 export async function DELETE(
   _request: NextRequest,
   { params }: { params: Promise<{ youtubeId: string }> },
