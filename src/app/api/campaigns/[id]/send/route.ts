@@ -58,7 +58,12 @@ export async function POST(
 
     const vars: SendVariables = {
       ChannelName: s.channel_name,
-      TopGames:    (ch?.top_games ?? []).join(' | ') || '—',
+      TopGames:    (() => {
+        const games = (ch?.top_games ?? []).slice(0, 2);
+        if (games.length === 2) return `${games[0]} and ${games[1]}`;
+        if (games.length === 1) return games[0];
+        return '—';
+      })(),
       Genre:       ch?.genre ?? '—',
       Platform:    ch?.platform ?? 'YouTube',
     };
