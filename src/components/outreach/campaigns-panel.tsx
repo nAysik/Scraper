@@ -198,7 +198,11 @@ export default function CampaignsPanel() {
     setDetailLoading(false);
   }
 
-  const estimatedMinutes = Math.ceil((selectedIds.size * 12) / 60);
+  const manualCount = manualText.trim()
+    ? manualText.split('\n').filter(l => l.trim().includes('@')).length
+    : 0;
+  const totalRecipients  = selectedIds.size + manualCount;
+  const estimatedMinutes = Math.ceil((totalRecipients * 12) / 60);
 
   // ── LIST VIEW ──────────────────────────────────────────────────────────────
   if (view === 'list') {
@@ -473,7 +477,7 @@ export default function CampaignsPanel() {
               ? 'Creating…'
               : sending
                 ? `Sending… (~${estimatedMinutes} min)`
-                : <><Send className="h-4 w-4 mr-1" />Create & send ({selectedIds.size})</>
+                : <><Send className="h-4 w-4 mr-1" />Create & send ({totalRecipients})</>
             }
           </Button>
           {sending && (
