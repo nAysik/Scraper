@@ -15,6 +15,8 @@
 - [ ] **Phase 5: Multi-Keyword Sweep** — Replace single keyword input with chip input; search up to 5 keywords in parallel; merge and dedup results
 - [ ] **Phase 6: Website Email Enrichment** — Follow website links from YouTube About page during enrichment to extract additional email addresses
 - [x] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge (completed 2026-05-16)
+- [ ] **Phase 8: Discovery UX** — Fix chip-input search regression and add auto-batch Save all button for large result sets
+- [ ] **Phase 9: Outreach Prioritizer** — AI relevance scoring (1–10) for saved channels using gpt-4o-mini, sorted by fit for your specific roguelite game
 
 ---
 
@@ -123,6 +125,17 @@
 - [x] 07-03-PLAN.md — TwitchDiscoveryPanel UI + OutreachTabs 4th tab + Outreach List platform column/CSV/Re-enrich guard
 **UI hint**: yes
 
+### Phase 8: Discovery UX
+**Goal:** Fix two UX problems in the Discover channels tab: the Search button is grayed out after the Phase 5 chip-input change unless the user presses Enter first, and users with 100–300 results must manually save 15 at a time — add an auto-batch save that saves all discovered channels sequentially in groups of 15.
+**Depends on:** Phase 5
+**Requirements:** UX-01, UX-02
+**Success Criteria:**
+1. Typing a keyword and clicking Search (without pressing Enter first) works — the input value is auto-committed as a chip and search fires.
+2. A "Save all" button appears when there are unsaved channels after search. Clicking it saves all eligible rows in sequential batches of 15, showing progress ("Saving batch 2 of 8…"). When all batches complete a summary panel shows total saved/partial/failed.
+3. Existing per-selection save flow (checkboxes → Save N channels) is unchanged.
+**Plans:** 1 plan
+- [ ] 08-01-PLAN.md — Fix chip-input search regression + auto-batch Save all button
+
 ---
 
 ## Progress Table
@@ -133,6 +146,7 @@
 | 2. Enrichment Pipeline | 5/5 | Complete | 2026-05-10 |
 | 3. Channel Discovery | 3/3 | Complete | 2026-05-15 |
 | 4. Outreach Dashboard & Export | 2/2 | Complete | 2026-05-15 |
-| 5. Multi-Keyword Sweep | 0/2 | In progress | — |
-| 6. Website Email Enrichment | 0/1 | Not started | — |
-| 7. Twitch Discovery | 3/3 | Complete   | 2026-05-16 |
+| 5. Multi-Keyword Sweep | 2/2 | Complete | 2026-05-16 |
+| 6. Website Email Enrichment | 1/1 | Complete | 2026-05-16 |
+| 7. Twitch Discovery | 3/3 | Complete | 2026-05-17 |
+| 8. Discovery UX | 0/1 | In progress | — |
