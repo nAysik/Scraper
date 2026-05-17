@@ -41,8 +41,6 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
   const fromName = process.env.FROM_NAME ?? 'Outreach';
   const domain   = user.includes('@') ? user.split('@')[1] : 'mail';
 
-  const htmlWithTracking = rewriteClickUrls(opts.htmlBody, opts.sendId);
-
   let transporter = await getTransporter();
 
   const mail = {
@@ -55,7 +53,7 @@ export async function sendEmail(opts: SendEmailOptions): Promise<void> {
       'List-Unsubscribe': `<mailto:${user}?subject=unsubscribe>`,
     },
     text: opts.textBody,
-    html: htmlWithTracking,
+    html: opts.htmlBody,
   };
 
   try {
