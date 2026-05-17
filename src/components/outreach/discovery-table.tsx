@@ -66,6 +66,8 @@ export default function DiscoveryPanel() {
   const [saving, setSaving] = useState(false);
   const [saveError, setSaveError] = useState('');
   const [summary, setSummary] = useState<{ succeeded: number; failed: number; partial: number } | null>(null);
+  const [autoSaving, setAutoSaving]       = useState(false);
+  const [batchProgress, setBatchProgress] = useState<{ current: number; total: number } | null>(null);
 
   function commitChip() {
     const v = inputValue.trim();
@@ -76,7 +78,16 @@ export default function DiscoveryPanel() {
 
   async function handleSearch(e: React.FormEvent) {
     e.preventDefault();
-    if (chips.length === 0 || searching) return;
+    // Auto-commit any typed-but-not-yet-chipped keyword so clicking Search
+    // without pressing Enter still works (fixes Phase 5 chip-input regression).
+    let activeChips = chips;
+    const pending = inputValue.trim();
+    if (pending && !chips.includes(pending) && chips.length < 5) {
+      activeChips = [...chips, pending];
+      setChips(activeChips);
+      setInputValue('');
+    }
+    if (activeChips.length === 0 || searching) return;
     setSearching(true);
     setSearchError('');
     setSummary(null);
@@ -85,7 +96,7 @@ export default function DiscoveryPanel() {
       const res = await fetch('/api/outreach/discover', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keywords: chips }),
+        body: JSON.stringify({ keywords: activeChips }),
       });
       const data = await res.json();
       if (!res.ok) {
@@ -243,24 +254,17 @@ export default function DiscoveryPanel() {
   const selectedCount = selectedRows.length;
   const tooMany = selectedCount > MAX_SAVE;
 
-  async function handleSave() {
-    if (selectedCount === 0 || tooMany || saving) return;
-
-    const selectedChannelIds = new Set(selectedRows.map(r => r.original.channelId));
-    const urlByChannelId = new Map<string, string>(
-      selectedRows.map(r => [r.original.channelId, r.original.url]),
-    );
-    const urls = selectedRows.map(r => r.original.url);
+  async function saveBatch(batch: DiscoveryRow[]): Promise<{ succeeded: number; failed: number; partial: number }> {
+    const batchIds  = new Set(batch.map(r => r.channelId));
+    const urlById   = new Map<string, string>(batch.map(r => [r.channelId, r.url]));
+    const urls      = batch.map(r => r.url);
 
     setRows(prev => prev.map(r =>
-      selectedChannelIds.has(r.channelId) ? { ...r, status: 'saving' as RowStatus } : r,
+      batchIds.has(r.channelId) ? { ...r, status: 'saving' as RowStatus } : r,
     ));
-    setSaving(true);
-    setSaveError('');
-    setSummary(null);
 
     try {
-      const res = await fetch('/api/outreach/enrich', {
+      const res  = await fetch('/api/outreach/enrich', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text: urls.join('\n') }),
@@ -268,11 +272,10 @@ export default function DiscoveryPanel() {
       const data = await res.json();
 
       if (!res.ok) {
-        setSaveError(data.error ?? 'Save failed — please try again.');
         setRows(prev => prev.map(r =>
-          selectedChannelIds.has(r.channelId) ? { ...r, status: 'idle' as RowStatus } : r,
+          batchIds.has(r.channelId) ? { ...r, status: 'idle' as RowStatus } : r,
         ));
-        return;
+        return { succeeded: 0, failed: batch.length, partial: 0 };
       }
 
       const failedUrls  = new Set<string>((data.failed  ?? []).map((x: { url: string }) => x.url));
@@ -280,16 +283,11 @@ export default function DiscoveryPanel() {
       const enrichedMap: Record<string, EnrichedRow> = (data.enriched as Record<string, EnrichedRow> | undefined) ?? {};
 
       setRows(prev => prev.map(r => {
-        if (!selectedChannelIds.has(r.channelId)) return r;
-
-        if (failedUrls.has(r.url)) {
-          return { ...r, status: 'failed' as RowStatus };
-        }
-
-        const url = urlByChannelId.get(r.channelId) ?? r.url;
-        const e = enrichedMap[url];
-
-        const enrichedPatch = e
+        if (!batchIds.has(r.channelId)) return r;
+        if (failedUrls.has(r.url)) return { ...r, status: 'failed' as RowStatus };
+        const url = urlById.get(r.channelId) ?? r.url;
+        const e   = enrichedMap[url];
+        const patch = e
           ? {
               topGames:        e.topGames,
               genre:           e.genre,
@@ -298,28 +296,64 @@ export default function DiscoveryPanel() {
               subscriberCount: e.subscriberCount ?? r.subscriberCount,
             }
           : {};
-
-        if (partialUrls.has(r.url)) {
-          return { ...r, ...enrichedPatch, status: 'partial' as RowStatus, alreadySaved: true };
-        }
-        return { ...r, ...enrichedPatch, status: 'saved' as RowStatus, alreadySaved: true };
+        if (partialUrls.has(r.url)) return { ...r, ...patch, status: 'partial' as RowStatus, alreadySaved: true };
+        return { ...r, ...patch, status: 'saved' as RowStatus, alreadySaved: true };
       }));
 
-      setSummary({
+      return {
         succeeded: data.succeeded ?? 0,
         failed:    (data.failed   ?? []).length,
         partial:   (data.partial  ?? []).length,
-      });
-      setRowSelection({});
+      };
     } catch (err) {
-      console.error('[discovery] save fetch failed', err);
-      setSaveError('Save failed — your changes were not saved. Please try again.');
+      console.error('[discovery] saveBatch fetch failed', err);
       setRows(prev => prev.map(r =>
-        selectedChannelIds.has(r.channelId) ? { ...r, status: 'idle' as RowStatus } : r,
+        batchIds.has(r.channelId) ? { ...r, status: 'idle' as RowStatus } : r,
       ));
-    } finally {
-      setSaving(false);
+      return { succeeded: 0, failed: batch.length, partial: 0 };
     }
+  }
+
+  async function handleSave() {
+    if (selectedCount === 0 || tooMany || saving || autoSaving) return;
+    setSaving(true);
+    setSaveError('');
+    setSummary(null);
+    const batch = selectedRows.map(r => r.original);
+    const result = await saveBatch(batch);
+    setSummary(result);
+    setRowSelection({});
+    setSaving(false);
+  }
+
+  async function handleSaveAll() {
+    if (autoSaving || saving) return;
+    setAutoSaving(true);
+    setSaveError('');
+    setSummary(null);
+    setRowSelection({});
+
+    // Snapshot eligible rows and track saved IDs locally because rows state
+    // updates asynchronously — cannot read updated rows mid-loop.
+    const savedIds    = new Set<string>(rows.filter(r => r.alreadySaved).map(r => r.channelId));
+    const allEligible = rows.filter(r => !r.alreadySaved && r.status === 'idle');
+    const total       = Math.ceil(allEligible.length / MAX_SAVE);
+    let totalSucceeded = 0, totalFailed = 0, totalPartial = 0;
+
+    for (let i = 0; i < allEligible.length; i += MAX_SAVE) {
+      const batch = allEligible.slice(i, i + MAX_SAVE).filter(r => !savedIds.has(r.channelId));
+      if (batch.length === 0) continue;
+      setBatchProgress({ current: Math.floor(i / MAX_SAVE) + 1, total });
+      const result = await saveBatch(batch);
+      totalSucceeded += result.succeeded;
+      totalFailed    += result.failed;
+      totalPartial   += result.partial;
+      batch.forEach(r => savedIds.add(r.channelId));
+    }
+
+    setSummary({ succeeded: totalSucceeded, failed: totalFailed, partial: totalPartial });
+    setBatchProgress(null);
+    setAutoSaving(false);
   }
 
   const searchButtonLabel = searching
@@ -377,7 +411,7 @@ export default function DiscoveryPanel() {
             <p className="text-xs text-gray-500 mt-1">{chips.length}/5 keywords</p>
           )}
         </div>
-        <Button type="submit" disabled={chips.length === 0 || searching}>
+        <Button type="submit" disabled={(chips.length === 0 && !inputValue.trim()) || searching}>
           {searching && (
             <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -409,7 +443,7 @@ export default function DiscoveryPanel() {
             </span>
             <Button
               onClick={handleSave}
-              disabled={selectedCount === 0 || tooMany || saving}
+              disabled={selectedCount === 0 || tooMany || saving || autoSaving}
             >
               {saving && (
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -419,6 +453,16 @@ export default function DiscoveryPanel() {
               )}
               {saveButtonLabel}
             </Button>
+            {rows.some(r => !r.alreadySaved && r.status === 'idle') && !autoSaving && !saving && (
+              <Button variant="outline" onClick={handleSaveAll} disabled={saving || autoSaving}>
+                Save all ({rows.filter(r => !r.alreadySaved && r.status === 'idle').length})
+              </Button>
+            )}
+            {autoSaving && batchProgress && (
+              <span className="text-sm text-gray-400">
+                Saving batch {batchProgress.current} of {batchProgress.total}…
+              </span>
+            )}
           </div>
 
           {/* Table */}
@@ -475,7 +519,7 @@ export default function DiscoveryPanel() {
             )}
             <Button
               onClick={handleSave}
-              disabled={selectedCount === 0 || tooMany || saving}
+              disabled={selectedCount === 0 || tooMany || saving || autoSaving}
             >
               {saving && (
                 <svg className="animate-spin -ml-1 mr-2 h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -485,6 +529,16 @@ export default function DiscoveryPanel() {
               )}
               {saveButtonLabel}
             </Button>
+            {rows.some(r => !r.alreadySaved && r.status === 'idle') && !autoSaving && !saving && (
+              <Button variant="outline" onClick={handleSaveAll} disabled={saving || autoSaving}>
+                Save all ({rows.filter(r => !r.alreadySaved && r.status === 'idle').length})
+              </Button>
+            )}
+            {autoSaving && batchProgress && (
+              <span className="text-sm text-gray-400">
+                Saving batch {batchProgress.current} of {batchProgress.total}…
+              </span>
+            )}
           </div>
 
           {/* Summary panel */}
