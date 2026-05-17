@@ -45,7 +45,7 @@ interface OutreachChannel {
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function statusBadge(status: string) {
-  if (status === 'clicked') return <Badge className="bg-green-600 text-white">Clicked</Badge>;
+  if (status === 'clicked') return <Badge variant="secondary">Sent</Badge>;
   if (status === 'sent')    return <Badge variant="secondary">Sent</Badge>;
   if (status === 'failed')  return <Badge variant="destructive">Failed</Badge>;
   return <Badge variant="outline">Pending</Badge>;
@@ -236,7 +236,6 @@ export default function CampaignsPanel() {
                   <TableHead className="text-gray-400 text-xs">Name</TableHead>
                   <TableHead className="text-gray-400 text-xs">Recipients</TableHead>
                   <TableHead className="text-gray-400 text-xs">Sent</TableHead>
-                  <TableHead className="text-gray-400 text-xs">Clicked</TableHead>
                   <TableHead className="text-gray-400 text-xs">Status</TableHead>
                   <TableHead className="text-gray-400 text-xs"></TableHead>
                 </TableRow>
@@ -247,7 +246,6 @@ export default function CampaignsPanel() {
                     <TableCell className="py-2 text-white font-medium">{c.name}</TableCell>
                     <TableCell className="py-2 text-gray-300">{c.totalCount}</TableCell>
                     <TableCell className="py-2 text-gray-300">{c.sentCount}</TableCell>
-                    <TableCell className="py-2 text-green-400 font-medium">{c.clickedCount}</TableCell>
                     <TableCell className="py-2">
                       {c.status === 'sent'    && <Badge variant="secondary">Sent</Badge>}
                       {c.status === 'sending' && <Badge variant="secondary"><Loader2 className="h-3 w-3 animate-spin mr-1 inline" />Sending</Badge>}
@@ -283,7 +281,7 @@ export default function CampaignsPanel() {
           </Button>
           <span className="text-white font-medium">{detailCampaign.name}</span>
           <span className="text-gray-400 text-sm">
-            {detailCampaign.sentCount} sent · {detailCampaign.clickedCount} clicked
+            {detailCampaign.sentCount} sent
           </span>
         </div>
 
@@ -300,7 +298,6 @@ export default function CampaignsPanel() {
                   <TableHead className="text-gray-400 text-xs">Email</TableHead>
                   <TableHead className="text-gray-400 text-xs">Status</TableHead>
                   <TableHead className="text-gray-400 text-xs">Sent at</TableHead>
-                  <TableHead className="text-gray-400 text-xs">Clicked at</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -311,9 +308,6 @@ export default function CampaignsPanel() {
                     <TableCell className="py-2">{statusBadge(s.status)}</TableCell>
                     <TableCell className="py-2 text-gray-400 text-sm">
                       {s.sentAt ? new Date(s.sentAt).toLocaleString() : '—'}
-                    </TableCell>
-                    <TableCell className="py-2 text-green-400 text-sm">
-                      {s.clickedAt ? new Date(s.clickedAt).toLocaleString() : '—'}
                     </TableCell>
                   </TableRow>
                 ))}
