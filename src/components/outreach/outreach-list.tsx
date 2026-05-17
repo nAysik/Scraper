@@ -55,6 +55,8 @@ export default function OutreachList() {
   const [sorting, setSorting] = useState<SortingState>([{ id: 'lastEnrichedAt', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [toolbarError, setToolbarError] = useState('');
+  const [reEnrichingAll, setReEnrichingAll] = useState(false);
+  const [reEnrichAllProgress, setReEnrichAllProgress] = useState<{ current: number; total: number } | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -147,6 +149,70 @@ export default function OutreachList() {
       setToolbarError('Re-enrich failed — please try again.');
     }
   }, []);
+
+  async function handleReenrichAll() {
+    if (reEnrichingAll) return;
+    setReEnrichingAll(true);
+    setToolbarError('');
+
+    const eligible = rows.filter(r => r.platform === 'youtube' && r.status === 'idle');
+    const BATCH = 15;
+    const total = Math.ceil(eligible.length / BATCH);
+
+    for (let i = 0; i < eligible.length; i += BATCH) {
+      const batch = eligible.slice(i, i + BATCH);
+      setReEnrichAllProgress({ current: Math.floor(i / BATCH) + 1, total });
+
+      const batchIds    = new Set(batch.map(r => r.youtubeId));
+      const urlById     = new Map(batch.map(r => [r.youtubeId, r.url]));
+      const urls        = batch.map(r => r.url);
+
+      setRows(prev => prev.map(r => batchIds.has(r.youtubeId) ? { ...r, status: 'enriching' as OutreachRowStatus } : r));
+
+      try {
+        const res  = await fetch('/api/outreach/enrich', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: urls.join('\n') }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setRows(prev => prev.map(r => batchIds.has(r.youtubeId) ? { ...r, status: 'idle' as OutreachRowStatus } : r));
+          continue;
+        }
+
+        const failedUrls  = new Set<string>((data.failed  ?? []).map((x: { url: string }) => x.url));
+        const partialUrls = new Set<string>((data.partial ?? []).map((x: { url: string }) => x.url));
+        const enrichedMap = (data.enriched ?? {}) as Record<string, {
+          topGames: string[] | null; genre: string | null; email: string | null;
+          subscriberCount: number | null; medianViews: number | null;
+        }>;
+
+        setRows(prev => prev.map(r => {
+          if (!batchIds.has(r.youtubeId)) return r;
+          const url = urlById.get(r.youtubeId) ?? r.url;
+          if (failedUrls.has(url)) return { ...r, status: 'idle' as OutreachRowStatus };
+          const e     = enrichedMap[url];
+          const patch = e ? {
+            topGames:        e.topGames,
+            genre:           e.genre,
+            email:           e.email,
+            subscriberCount: e.subscriberCount ?? r.subscriberCount,
+            medianViews:     e.medianViews,
+            lastEnrichedAt:  new Date().toISOString(),
+          } : {};
+          if (partialUrls.has(url)) return { ...r, ...patch, status: 'idle' as OutreachRowStatus };
+          return { ...r, ...patch, status: 'idle' as OutreachRowStatus };
+        }));
+      } catch {
+        setRows(prev => prev.map(r => batchIds.has(r.youtubeId) ? { ...r, status: 'idle' as OutreachRowStatus } : r));
+      }
+    }
+
+    setReEnrichAllProgress(null);
+    setReEnrichingAll(false);
+  }
 
   const handleDelete = useCallback(async (youtubeId: string) => {
     const backup = rows.find(r => r.youtubeId === youtubeId);
@@ -422,6 +488,19 @@ export default function OutreachList() {
             <Trash2 className="h-4 w-4 mr-1" />
             Delete {selectedCount} channel{selectedCount === 1 ? '' : 's'}
           </Button>
+        )}
+
+        {!reEnrichingAll && rows.some(r => r.platform === 'youtube' && r.status === 'idle') && (
+          <Button variant="outline" size="sm" onClick={handleReenrichAll}>
+            <RefreshCw className="h-4 w-4 mr-1" />
+            Re-enrich all ({rows.filter(r => r.platform === 'youtube' && r.status === 'idle').length})
+          </Button>
+        )}
+        {reEnrichingAll && reEnrichAllProgress && (
+          <span className="text-sm text-gray-400 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />
+            Batch {reEnrichAllProgress.current}/{reEnrichAllProgress.total}…
+          </span>
         )}
 
         <Button variant="outline" size="sm" onClick={handleExportCsv}>
