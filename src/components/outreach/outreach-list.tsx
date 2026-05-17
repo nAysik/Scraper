@@ -94,9 +94,11 @@ export default function OutreachList() {
       if (!r.lastVideoAt || new Date(r.lastVideoAt).getTime() < cutoff) return false;
     }
     if (gamingOnly && r.platform === 'youtube') {
+      // 'Other' = GPT's fallback when channel has no clear gaming category → treat as non-gaming
+      if (r.genre === 'Other') return false;
+      // Also hide channels with no genre and no game titles at all
       const hasGames = r.topGames && r.topGames.length > 0;
-      const hasGenre = Boolean(r.genre);
-      if (!hasGames && !hasGenre) return false;
+      if (!r.genre && !hasGames) return false;
     }
     return true;
   }), [rows, genreFilter, minMedianViews, maxSubs, maxInactiveDays, gamingOnly]);
