@@ -61,6 +61,11 @@ export default function OutreachList() {
   const [editingEmailVal, setEditingEmailVal] = useState('');
   const [reEnrichingAll, setReEnrichingAll] = useState(false);
   const [reEnrichAllProgress, setReEnrichAllProgress] = useState<{ current: number; total: number } | null>(null);
+  const [scoring, setScoring]             = useState(false);
+  const [scoreForm, setScoreForm]         = useState(false);
+  const [gameName, setGameName]           = useState('');
+  const [comparables, setComparables]     = useState('');
+  const [scoreProgress, setScoreProgress] = useState('');
 
   useEffect(() => {
     let cancelled = false;
@@ -218,6 +223,41 @@ export default function OutreachList() {
 
     setReEnrichAllProgress(null);
     setReEnrichingAll(false);
+  }
+
+  async function handleScoreAll() {
+    if (scoring || !gameName.trim() || !comparables.trim()) return;
+    setScoring(true);
+    setScoreProgress('Scoring…');
+    try {
+      const res = await fetch('/api/outreach/score-all', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ gameName: gameName.trim(), comparables: comparables.trim() }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setScoreProgress(`Error: ${data.error ?? 'Scoring failed'}`);
+        return;
+      }
+      setScoreProgress('Refreshing…');
+      const refreshRes = await fetch('/api/outreach/channels');
+      const refreshData = await refreshRes.json();
+      const list: OutreachRow[] = (refreshData.channels ?? []).map((c: Omit<OutreachRow, 'status'>) => ({
+        ...c,
+        platform:      (c as OutreachRow).platform ?? 'youtube',
+        priorityScore:  (c as OutreachRow).priorityScore  ?? null,
+        priorityReason: (c as OutreachRow).priorityReason ?? null,
+        status: 'idle' as OutreachRowStatus,
+      }));
+      setRows(list);
+      setScoreProgress(`Done — ${data.scored as number} scored`);
+      setScoreForm(false);
+    } catch {
+      setScoreProgress('Error — please try again.');
+    } finally {
+      setScoring(false);
+    }
   }
 
   const handleDelete = useCallback(async (youtubeId: string) => {
@@ -548,6 +588,43 @@ export default function OutreachList() {
         >
           Gaming only
         </Button>
+
+        {/* Score all inline form */}
+        {!scoreForm && (
+          <Button variant="outline" size="sm" onClick={() => setScoreForm(true)} disabled={scoring}>
+            Score all
+          </Button>
+        )}
+        {scoreForm && !scoring && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <Input
+              value={gameName}
+              onChange={e => setGameName(e.target.value)}
+              placeholder="Your game, e.g. RealmWalker"
+              className="w-44 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+            />
+            <Input
+              value={comparables}
+              onChange={e => setComparables(e.target.value)}
+              placeholder="Similar games, e.g. Hades, Slay the Spire"
+              className="w-56 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+            />
+            <Button size="sm" onClick={handleScoreAll} disabled={!gameName.trim() || !comparables.trim()}>
+              Run scoring
+            </Button>
+            <Button size="sm" variant="ghost" onClick={() => { setScoreForm(false); setScoreProgress(''); }}>
+              Cancel
+            </Button>
+          </div>
+        )}
+        {scoring && (
+          <span className="text-sm text-gray-400 flex items-center gap-1">
+            <Loader2 className="h-3 w-3 animate-spin" />{scoreProgress}
+          </span>
+        )}
+        {!scoring && scoreProgress && !scoreForm && (
+          <span className="text-sm text-gray-400">{scoreProgress}</span>
+        )}
 
         <span className="text-sm text-gray-400 ml-auto">
           {filtered.length} channel{filtered.length === 1 ? '' : 's'}
