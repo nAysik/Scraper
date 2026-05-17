@@ -363,9 +363,8 @@ export default function OutreachList() {
       enableSorting: false,
     },
     {
-      id: 'priorityScore',
+      accessorKey: 'priorityScore',
       header: 'Score',
-      enableSorting: true,
       sortingFn: (a, b) => {
         const av = a.original.priorityScore ?? -1;
         const bv = b.original.priorityScore ?? -1;
