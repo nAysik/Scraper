@@ -31,6 +31,10 @@ Copy `.env.local` and fill in all keys before running anything:
 | `PROXY_URL` | Optional residential proxy for InnerTube requests |
 | `TWITCH_CLIENT_ID`     | Twitch app client ID for the Discover on Twitch feature (Phase 7) |
 | `TWITCH_CLIENT_SECRET` | Twitch app client secret — server-only, never exposed to browser  |
+| `SMTP_USER`           | SMTP username / sender email address for one.com outreach emails |
+| `SMTP_PASS`           | SMTP password for one.com outreach emails |
+| `FROM_NAME`           | Sender display name shown in outreach email From field |
+| `NEXT_PUBLIC_APP_URL` | Deployed Vercel URL for click tracking links, e.g. https://yourapp.vercel.app |
 
 ## Database
 
