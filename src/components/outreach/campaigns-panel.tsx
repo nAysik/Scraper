@@ -83,6 +83,7 @@ export default function CampaignsPanel() {
   const [subject, setSubject]                 = useState('');
   const [bodyText, setBodyText]               = useState('');
   const [bodyHtml, setBodyHtml]               = useState('');
+  const [manualText, setManualText]           = useState(''); // one per line: email or email:Name
   const [creating, setCreating]               = useState(false);
   const [sending, setSending]                 = useState(false);
   const [sendResult, setSendResult]           = useState<{ sent: number; failed: number } | null>(null);
@@ -148,6 +149,12 @@ export default function CampaignsPanel() {
           bodyTextTemplate: bodyText,
           bodyHtmlTemplate: bodyHtml || `<pre style="font-family:sans-serif;white-space:pre-wrap">${bodyText}</pre>`,
           channelIds:       Array.from(selectedIds),
+          manualRecipients: manualText.trim()
+            ? manualText.split('\n').map(line => {
+                const [email, ...nameParts] = line.trim().split(':');
+                return { email: email.trim(), name: nameParts.join(':').trim() || email.trim() };
+              }).filter(r => r.email.includes('@'))
+            : [],
         }),
       });
       const createData = await createRes.json();
@@ -173,7 +180,7 @@ export default function CampaignsPanel() {
 
   function resetCompose() {
     setCampaignName(''); setSubject(''); setBodyText(''); setBodyHtml('');
-    setSelectedIds(new Set()); setSendResult(null); setComposeError('');
+    setManualText(''); setSelectedIds(new Set()); setSendResult(null); setComposeError('');
   }
 
   async function handleDelete(id: string) {
@@ -389,6 +396,23 @@ export default function CampaignsPanel() {
         )}
       </div>
 
+      {/* Manual recipients */}
+      <div className="space-y-2">
+        <label className="text-xs text-gray-400 uppercase tracking-wide">
+          Additional recipients <span className="normal-case text-gray-500">(one per line: email or email:Name)</span>
+        </label>
+        <Textarea
+          value={manualText}
+          onChange={e => setManualText(e.target.value)}
+          placeholder={"creator@gmail.com:Alex Johnson\nanother@example.com"}
+          rows={4}
+          className="bg-gray-900 border-gray-700 text-white placeholder:text-gray-500 font-mono text-sm"
+        />
+        <p className="text-xs text-gray-500">
+          Use <code className="text-gray-400">email:Name</code> format for personalisation, or just the email address.
+        </p>
+      </div>
+
       {/* Template */}
       <div className="space-y-2">
         <label className="text-xs text-gray-400 uppercase tracking-wide">
@@ -442,7 +466,7 @@ export default function CampaignsPanel() {
         <div className="flex items-center gap-3 flex-wrap">
           <Button
             onClick={handleCreateAndSend}
-            disabled={!campaignName.trim() || !subject.trim() || selectedIds.size === 0 || creating || sending}
+            disabled={!campaignName.trim() || !subject.trim() || (selectedIds.size === 0 && !manualText.trim()) || creating || sending}
           >
             {(creating || sending) && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
             {creating

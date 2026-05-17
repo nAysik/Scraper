@@ -47,18 +47,21 @@ export async function POST(request: NextRequest) {
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
   const body = await request.json().catch(() => ({}));
-  const { name, subjectTemplate, bodyTextTemplate, bodyHtmlTemplate, channelIds } = body as {
+  const { name, subjectTemplate, bodyTextTemplate, bodyHtmlTemplate, channelIds, manualRecipients } = body as {
     name: string;
     subjectTemplate: string;
     bodyTextTemplate: string;
     bodyHtmlTemplate: string;
     channelIds: string[];
+    manualRecipients?: { email: string; name: string }[];
   };
 
   if (!name?.trim()) return NextResponse.json({ error: 'name is required' }, { status: 400 });
   if (!subjectTemplate?.trim()) return NextResponse.json({ error: 'subjectTemplate is required' }, { status: 400 });
-  if (!Array.isArray(channelIds) || channelIds.length === 0)
-    return NextResponse.json({ error: 'channelIds must be a non-empty array' }, { status: 400 });
+  const hasChannels = Array.isArray(channelIds) && channelIds.length > 0;
+  const hasManual   = Array.isArray(manualRecipients) && manualRecipients.length > 0;
+  if (!hasChannels && !hasManual)
+    return NextResponse.json({ error: 'Provide at least one channel or manual recipient' }, { status: 400 });
 
   const sb = createServiceClient();
 
@@ -76,22 +79,44 @@ export async function POST(request: NextRequest) {
 
   if (campErr || !campaign) return NextResponse.json({ error: campErr?.message ?? 'Insert failed' }, { status: 500 });
 
-  const { data: channels } = await sb
-    .from('outreach_channels')
-    .select('youtube_id, name, email')
-    .in('youtube_id', channelIds);
+  const allSends: object[] = [];
 
-  const sends = (channels ?? [])
-    .filter((c: { email: string | null }) => c.email)
-    .map((c: { youtube_id: string; name: string; email: string }) => ({
-      campaign_id:  campaign.id,
-      youtube_id:   c.youtube_id,
-      email:        c.email,
-      channel_name: c.name,
-      status:       'pending',
-    }));
+  // Channel-based recipients
+  if (hasChannels) {
+    const { data: channels } = await sb
+      .from('outreach_channels')
+      .select('youtube_id, name, email')
+      .in('youtube_id', channelIds);
 
-  if (sends.length > 0) await sb.from('campaign_sends').insert(sends);
+    (channels ?? [])
+      .filter((c: { email: string | null }) => c.email)
+      .forEach((c: { youtube_id: string; name: string; email: string }) =>
+        allSends.push({
+          campaign_id:  campaign.id,
+          youtube_id:   c.youtube_id,
+          email:        c.email,
+          channel_name: c.name,
+          status:       'pending',
+        })
+      );
+  }
 
-  return NextResponse.json({ campaignId: campaign.id, sendsCreated: sends.length });
+  // Manual recipients — use email as youtube_id (no matching channel row)
+  if (hasManual) {
+    (manualRecipients ?? [])
+      .filter(r => r.email?.includes('@'))
+      .forEach(r =>
+        allSends.push({
+          campaign_id:  campaign.id,
+          youtube_id:   `manual:${r.email}`,
+          email:        r.email.trim(),
+          channel_name: r.name?.trim() || r.email.trim(),
+          status:       'pending',
+        })
+      );
+  }
+
+  if (allSends.length > 0) await sb.from('campaign_sends').insert(allSends);
+
+  return NextResponse.json({ campaignId: campaign.id, sendsCreated: allSends.length });
 }
