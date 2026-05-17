@@ -134,7 +134,7 @@ export default function CampaignsPanel() {
   }
 
   async function handleCreateAndSend() {
-    if (!campaignName.trim() || !subject.trim() || selectedIds.size === 0) return;
+    if (!campaignName.trim() || !subject.trim() || (selectedIds.size === 0 && !manualText.trim())) return;
     setCreating(true);
     setComposeError('');
     setSendResult(null);
