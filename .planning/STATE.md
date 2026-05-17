@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Coverage & Email Expansion
 status: milestone_complete
-last_updated: "2026-05-17T00:00:00.000Z"
-last_activity: "2026-05-17 — Phase 8 plan 01 complete: chip-input search regression fix + Save all auto-batch for DiscoveryPanel"
+last_updated: "2026-05-17T17:03:39.425Z"
+last_activity: "2026-05-17 — Phase 9 plan 01 complete: migration 009 adds priority_score/priority_reason; GET /api/outreach/channels exposes both fields"
 progress:
-  total_phases: 8
+  total_phases: 9
   completed_phases: 8
-  total_plans: 19
-  completed_plans: 19
-  percent: 100
+  total_plans: 21
+  completed_plans: 20
+  percent: 95
 ---
 
 # Project State
@@ -37,9 +37,9 @@ See: .planning/PROJECT.md
 
 ## Current Position
 
-**Active phase:** 8 — Discovery UX (complete)
-**Active plan:** 08-01 complete
-**Overall progress:** 8 phases, 08-01 executed
+**Active phase:** 9 — Outreach Prioritizer (in progress)
+**Active plan:** 09-01 complete
+**Overall progress:** 9 phases, 09-01 executed
 
 ## Performance Metrics
 
@@ -67,6 +67,8 @@ See: .planning/PROJECT.md
 - saveBatch extracted as shared helper so both handleSave and handleSaveAll reuse identical fetch + row-update logic without duplication
 - handleSaveAll snapshots eligible rows before the loop to avoid reading stale React state mid-iteration; savedIds tracked locally not via rows state
 - Submit button disabled prop allows pending inputValue as trigger so chip commit is not required before clicking Search
+- Used IF NOT EXISTS guard on ADD COLUMN for idempotent migration (safe to re-run)
+- priority_score and priority_reason are nullable — null means un-scored, not zero
 
 ### Architecture Notes
 
@@ -87,5 +89,5 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-**Last activity:** 2026-05-17 — Phase 8 plan 01 complete: chip-input search regression fix + Save all auto-batch for DiscoveryPanel
-**Next action:** Phase 7 plan 03 (Twitch Discovery UI) — if still pending
+**Last activity:** 2026-05-17 — Phase 9 plan 01 complete: migration 009 adds priority_score/priority_reason; GET /api/outreach/channels exposes both fields
+**Next action:** Phase 9 plan 02 — priority scoring pipeline (OpenAI integration)

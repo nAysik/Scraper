@@ -136,6 +136,21 @@
 **Plans:** 1 plan
 - [ ] 08-01-PLAN.md — Fix chip-input search regression + auto-batch Save all button
 
+### Phase 9: Outreach Prioritizer
+**Goal:** Add AI-powered relevance scoring to the Outreach List. A "Score all" button lets the user enter their game name and comparable titles, then gpt-4o-mini scores every saved YouTube channel 1–10 for outreach fit. Scores are stored in the DB and shown as HIGH/MEDIUM/LOW badges in the table, sortable, with a one-sentence reason on hover.
+**Depends on:** Phase 4 (Outreach List)
+**Requirements:** PRI-01, PRI-02, PRI-03, PRI-04, PRI-05
+**Success Criteria:**
+1. Migration 009 adds `priority_score int` and `priority_reason text` (nullable) to `outreach_channels`.
+2. GET /api/outreach/channels returns `priorityScore` and `priorityReason` in each channel object.
+3. POST /api/outreach/score-all accepts `{ gameName, comparables }`, batches all YouTube channels 20 at a time through gpt-4o-mini, stores scores, returns `{ scored, failed }`.
+4. Outreach List shows a Score column with HIGH (8–10)/MEDIUM (5–7)/LOW (1–4) badge, sortable, with reason on hover.
+5. "Score all" button in toolbar opens an inline form, shows progress while running.
+**Plans:** 3 plans
+- [x] 09-01-PLAN.md — Migration 009 (priority_score + priority_reason) + GET channels route update
+- [ ] 09-02-PLAN.md — score-channels.ts GPT scorer + POST /api/outreach/score-all route
+- [ ] 09-03-PLAN.md — Outreach List UI: Score column, badge, tooltip, Score all button + inline form
+
 ---
 
 ## Progress Table
@@ -149,4 +164,5 @@
 | 5. Multi-Keyword Sweep | 2/2 | Complete | 2026-05-16 |
 | 6. Website Email Enrichment | 1/1 | Complete | 2026-05-16 |
 | 7. Twitch Discovery | 3/3 | Complete | 2026-05-17 |
-| 8. Discovery UX | 0/1 | In progress | — |
+| 8. Discovery UX | 1/1 | Complete | 2026-05-17 |
+| 9. Outreach Prioritizer | 1/3 | In progress | — |
