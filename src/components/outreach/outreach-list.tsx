@@ -31,6 +31,7 @@ interface OutreachRow {
   genre: string | null;
   medianViews: number | null;
   lastEnrichedAt: string | null;
+  lastVideoAt: string | null;
   email: string | null;
   platform: string;
   status: OutreachRowStatus;
@@ -49,6 +50,7 @@ export default function OutreachList() {
   const [genreFilter, setGenreFilter] = useState('');
   const [minMedianViews, setMinMedianViews] = useState<number | null>(null);
   const [maxSubs, setMaxSubs] = useState<number | null>(null);
+  const [maxInactiveDays, setMaxInactiveDays] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'lastEnrichedAt', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [toolbarError, setToolbarError] = useState('');
@@ -86,8 +88,12 @@ export default function OutreachList() {
     if (genreFilter && r.genre !== genreFilter) return false;
     if (minMedianViews !== null && (r.medianViews === null || r.medianViews < minMedianViews)) return false;
     if (maxSubs !== null && maxSubs > 0 && r.subscriberCount !== null && r.subscriberCount > maxSubs) return false;
+    if (maxInactiveDays !== null) {
+      const cutoff = Date.now() - maxInactiveDays * 24 * 60 * 60 * 1000;
+      if (!r.lastVideoAt || new Date(r.lastVideoAt).getTime() < cutoff) return false;
+    }
     return true;
-  }), [rows, genreFilter, minMedianViews, maxSubs]);
+  }), [rows, genreFilter, minMedianViews, maxSubs, maxInactiveDays]);
 
   const handleReenrich = useCallback(async (row: OutreachRow) => {
     setRows(prev => prev.map(r => r.youtubeId === row.youtubeId ? { ...r, status: 'enriching' } : r));
@@ -378,6 +384,18 @@ export default function OutreachList() {
           onChange={e => setMaxSubs(e.target.value ? Number(e.target.value) : null)}
           className="w-36 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
         />
+
+        <Input
+          type="number"
+          placeholder="e.g. 90"
+          min={1}
+          value={maxInactiveDays ?? ''}
+          onChange={e => setMaxInactiveDays(e.target.value ? Number(e.target.value) : null)}
+          className="w-36 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+        />
+        {maxInactiveDays !== null && (
+          <span className="text-xs text-gray-500 whitespace-nowrap">days active</span>
+        )}
 
         <span className="text-sm text-gray-400 ml-auto">
           {filtered.length} channel{filtered.length === 1 ? '' : 's'}
