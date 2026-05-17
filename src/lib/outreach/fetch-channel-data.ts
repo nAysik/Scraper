@@ -76,10 +76,13 @@ async function fetchEmailFromUrl(url: string): Promise<string | null> {
       signal: controller.signal,
       headers: { 'User-Agent': 'Mozilla/5.0' },
     });
+    if (!res.ok) return null;
     const html = await res.text();
 
-    // Linktree: links (including mailto: buttons) are in the __NEXT_DATA__ JSON blob.
-    if (url.includes('linktr.ee')) {
+    // Linktree: structured mailto: links are in __NEXT_DATA__ JSON blob.
+    // Use hostname check (not substring) to prevent spoofing.
+    const parsedUrl = new URL(url);
+    if (parsedUrl.hostname === 'linktr.ee' || parsedUrl.hostname.endsWith('.linktr.ee')) {
       const nd = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
       if (nd) {
         try {
@@ -93,9 +96,11 @@ async function fetchEmailFromUrl(url: string): Promise<string | null> {
             }
           }
         } catch {
-          // JSON parse failed — fall through to generic regex
+          // JSON parse failed
         }
       }
+      // Linktree: don't fall through to generic regex — structured path only
+      return null;
     }
 
     // Generic: EMAIL_RE matches plain addresses and mailto: href attributes.
@@ -149,9 +154,10 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
       if (!raw) continue;
       const target = unwrapYouTubeRedirect(raw);
       if (!target) continue;
-      let hostname = '';
-      try { hostname = new URL(target).hostname; } catch { continue; }
-      if (SOCIAL_SKIP.has(hostname)) continue;
+      let parsed: URL;
+      try { parsed = new URL(target); } catch { continue; }
+      if (parsed.protocol !== 'https:') continue;
+      if (SOCIAL_SKIP.has(parsed.hostname)) continue;
       qualifyingUrls.push(target);
     }
 
@@ -161,7 +167,7 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
       );
       const found = results.find(
         (r): r is PromiseFulfilledResult<string> =>
-          r.status === 'fulfilled' && r.value !== null,
+          r.status === 'fulfilled' && !!r.value,
       );
       websiteEmail = found?.value ?? null;
     }
