@@ -63,6 +63,51 @@ function unwrapYouTubeRedirect(raw: string): string {
   }
 }
 
+// Fetch a single URL and extract an email address from the response HTML.
+// Linktree pages: parse __NEXT_DATA__ JSON for mailto: links (client-rendered content
+// is embedded server-side in the Next.js hydration blob).
+// Generic fallback: EMAIL_RE on the full HTML body (matches plain text and mailto: hrefs).
+// Returns null on timeout, network error, or no email found.
+async function fetchEmailFromUrl(url: string): Promise<string | null> {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(url, {
+      signal: controller.signal,
+      headers: { 'User-Agent': 'Mozilla/5.0' },
+    });
+    const html = await res.text();
+
+    // Linktree: links (including mailto: buttons) are in the __NEXT_DATA__ JSON blob.
+    if (url.includes('linktr.ee')) {
+      const nd = html.match(/<script id="__NEXT_DATA__"[^>]*>([\s\S]*?)<\/script>/);
+      if (nd) {
+        try {
+          const data = JSON.parse(nd[1]);
+          const links: unknown[] = (data as any)?.props?.pageProps?.links ?? [];
+          for (const link of links) {
+            const linkUrl: string = (link as any)?.url ?? '';
+            if (linkUrl.startsWith('mailto:')) {
+              const email = linkUrl.slice('mailto:'.length).split('?')[0];
+              if (EMAIL_RE.test(email)) return email;
+            }
+          }
+        } catch {
+          // JSON parse failed — fall through to generic regex
+        }
+      }
+    }
+
+    // Generic: EMAIL_RE matches plain addresses and mailto: href attributes.
+    const match = html.match(EMAIL_RE);
+    return match ? match[0] : null;
+  } catch {
+    return null;
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
 async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelData> {
   const client = await getClient();
   const channel = await client.getChannel(channelId);
@@ -89,13 +134,16 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
     description = (channel.metadata as any)?.description ?? '';
   }
 
-  // Website email fallback (EML-01, EML-02, EML-03).
-  // Walks primary_links from the About page; skips social platforms; fetches the
-  // first qualifying URL with a 5-second timeout; runs EMAIL_RE on the HTML.
-  // All failures are silent — website fetch never blocks enrichment.
+  // Website email fallback — parallel fetch of all qualifying social links.
+  // Collects every non-social-platform URL from primary_links, fires them all
+  // simultaneously, takes the first that yields an email.
+  // Linktree pages are handled via __NEXT_DATA__ JSON parsing inside fetchEmailFromUrl.
+  // All failures are silent — this block never blocks enrichment.
   let websiteEmail: string | null = null;
   try {
     const primaryLinks: any[] = (about as any)?.primary_links ?? [];
+    const qualifyingUrls: string[] = [];
+
     for (const link of primaryLinks) {
       const raw: string = (link as any)?.endpoint?.metadata?.url ?? '';
       if (!raw) continue;
@@ -104,21 +152,18 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
       let hostname = '';
       try { hostname = new URL(target).hostname; } catch { continue; }
       if (SOCIAL_SKIP.has(hostname)) continue;
-      // Found a qualifying website URL — fetch it.
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 5000);
-      try {
-        const res = await fetch(target, {
-          signal: controller.signal,
-          headers: { 'User-Agent': 'Mozilla/5.0' },
-        });
-        const html = await res.text();
-        const match = html.match(EMAIL_RE);
-        if (match) websiteEmail = match[0];
-      } finally {
-        clearTimeout(timeoutId);
-      }
-      break; // only try the first qualifying link
+      qualifyingUrls.push(target);
+    }
+
+    if (qualifyingUrls.length > 0) {
+      const results = await Promise.allSettled(
+        qualifyingUrls.map(url => fetchEmailFromUrl(url)),
+      );
+      const found = results.find(
+        (r): r is PromiseFulfilledResult<string> =>
+          r.status === 'fulfilled' && r.value !== null,
+      );
+      websiteEmail = found?.value ?? null;
     }
   } catch {
     // silent — website fetch failure never blocks enrichment
