@@ -251,6 +251,7 @@ export default function OutreachList() {
         status: 'idle' as OutreachRowStatus,
       }));
       setRows(list);
+      setSorting([{ id: 'priorityScore', desc: true }]);
       setScoreProgress(`Done — ${data.scored as number} scored`);
       setScoreForm(false);
     } catch {
