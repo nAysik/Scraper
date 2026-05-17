@@ -34,6 +34,8 @@ interface OutreachRow {
   lastVideoAt: string | null;
   email: string | null;
   platform: string;
+  priorityScore:  number | null;
+  priorityReason: string | null;
   status: OutreachRowStatus;
 }
 
@@ -70,7 +72,9 @@ export default function OutreachList() {
         if (cancelled) return;
         const list: OutreachRow[] = (data.channels ?? []).map((c: Omit<OutreachRow, 'status'>) => ({
           ...c,
-          platform: (c as OutreachRow).platform ?? 'youtube',
+          platform:      (c as OutreachRow).platform      ?? 'youtube',
+          priorityScore:  (c as OutreachRow).priorityScore  ?? null,
+          priorityReason: (c as OutreachRow).priorityReason ?? null,
           status: 'idle' as OutreachRowStatus,
         }));
         setRows(list);
@@ -316,6 +320,23 @@ export default function OutreachList() {
         ? <Badge variant="secondary">{row.original.genre}</Badge>
         : <span className="text-gray-500">—</span>,
       enableSorting: false,
+    },
+    {
+      id: 'priorityScore',
+      header: 'Score',
+      sortingFn: (a, b) => {
+        const av = a.original.priorityScore ?? -1;
+        const bv = b.original.priorityScore ?? -1;
+        return av - bv;
+      },
+      cell: ({ row }) => {
+        const score  = row.original.priorityScore;
+        const reason = row.original.priorityReason ?? '';
+        if (score === null) return <span className="text-gray-500">—</span>;
+        if (score >= 8) return <span title={reason}><Badge className="bg-green-700 text-white cursor-help">HIGH {score}</Badge></span>;
+        if (score >= 5) return <span title={reason}><Badge className="bg-yellow-600 text-white cursor-help">MED {score}</Badge></span>;
+        return <span title={reason}><Badge variant="destructive" className="cursor-help">LOW {score}</Badge></span>;
+      },
     },
     {
       accessorKey: 'medianViews',
