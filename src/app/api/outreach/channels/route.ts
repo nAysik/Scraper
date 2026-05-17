@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('outreach_channels')
-    .select('youtube_id, name, url, subscriber_count, top_games, genre, median_views, last_enriched_at, last_video_at, email, platform')
+    .select('youtube_id, name, url, subscriber_count, top_games, genre, median_views, last_enriched_at, last_video_at, email, platform, priority_score, priority_reason')
     .order('last_enriched_at', { ascending: false, nullsFirst: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -25,6 +25,8 @@ export async function GET() {
     lastVideoAt:     c.last_video_at ?? null,
     email:           c.email,
     platform:        c.platform ?? 'youtube',
+    priorityScore:   c.priority_score  ?? null,
+    priorityReason:  c.priority_reason ?? null,
   }));
 
   return NextResponse.json({ channels });
