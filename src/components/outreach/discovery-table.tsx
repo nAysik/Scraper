@@ -26,6 +26,7 @@ import type { DiscoveredChannel } from '@/lib/scraper/search-videos';
 import EnrichForm from './enrich-form';
 import OutreachList from './outreach-list';
 import TwitchDiscoveryPanel from './twitch-discovery-panel';
+import CampaignsPanel from './campaigns-panel';
 
 const MAX_SAVE = 15;
 
@@ -565,7 +566,7 @@ export default function DiscoveryPanel() {
 // DiscoveryPanel. Keeps the page at /dashboard/outreach so DashboardNav's
 // exact-match active state still highlights the Outreach tab (Pitfall 6).
 export function OutreachTabs() {
-  const [tab, setTab] = useState<'discover' | 'enrich' | 'outreach-list' | 'twitch-discover'>('discover');
+  const [tab, setTab] = useState<'discover' | 'enrich' | 'outreach-list' | 'twitch-discover' | 'campaigns'>('discover');
 
   return (
     <div className="space-y-6">
@@ -614,12 +615,24 @@ export function OutreachTabs() {
         >
           Discover on Twitch
         </button>
+        <button
+          type="button"
+          onClick={() => setTab('campaigns')}
+          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+            tab === 'campaigns'
+              ? 'border-white text-white'
+              : 'border-transparent text-gray-400 hover:text-gray-200'
+          }`}
+        >
+          Campaigns
+        </button>
       </div>
 
       {tab === 'discover'        && <DiscoveryPanel />}
       {tab === 'enrich'          && <EnrichForm />}
       {tab === 'outreach-list'   && <OutreachList />}
       {tab === 'twitch-discover' && <TwitchDiscoveryPanel />}
+      {tab === 'campaigns' && <CampaignsPanel />}
     </div>
   );
 }
