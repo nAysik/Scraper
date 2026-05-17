@@ -59,12 +59,12 @@
 ### Twitch Discovery
 
 - [ ] **TWI-01**: `outreach_channels` table gains a `platform text DEFAULT 'youtube'` column (Migration 006); existing rows get 'youtube'; `(youtube_id, platform)` is a unique pair
-- [ ] **TWI-02**: A "Discover on Twitch" tab is added to OutreachTabs (4th tab)
+- [x] **TWI-02**: A "Discover on Twitch" tab is added to OutreachTabs (4th tab)
 - [ ] **TWI-03**: Searching by game name returns up to 100 live Twitch streamers with display name, Twitch URL, live viewer count, and email extracted from bio
 - [ ] **TWI-04**: Selected Twitch streamers (up to 15) can be saved to `outreach_channels` with `platform='twitch'` in a single action
-- [ ] **TWI-05**: The Outreach List table shows a Platform column (YouTube / Twitch badge) for all rows
-- [ ] **TWI-06**: The CSV export includes a Platform column
-- [ ] **TWI-07**: The Re-enrich button is hidden for rows with `platform='twitch'`
+- [x] **TWI-05**: The Outreach List table shows a Platform column (YouTube / Twitch badge) for all rows
+- [x] **TWI-06**: The CSV export includes a Platform column
+- [x] **TWI-07**: The Re-enrich button is hidden for rows with `platform='twitch'`
 
 ### Deferred (future milestones)
 
@@ -119,9 +119,9 @@
 | EML-02 | Phase 6 — Website Email Enrichment | Pending |
 | EML-03 | Phase 6 — Website Email Enrichment | Pending |
 | TWI-01 | Phase 7 — Twitch Discovery | Pending |
-| TWI-02 | Phase 7 — Twitch Discovery | Pending |
+| TWI-02 | Phase 7 — Twitch Discovery | Complete |
 | TWI-03 | Phase 7 — Twitch Discovery | Pending |
 | TWI-04 | Phase 7 — Twitch Discovery | Pending |
-| TWI-05 | Phase 7 — Twitch Discovery | Pending |
-| TWI-06 | Phase 7 — Twitch Discovery | Pending |
-| TWI-07 | Phase 7 — Twitch Discovery | Pending |
+| TWI-05 | Phase 7 — Twitch Discovery | Complete |
+| TWI-06 | Phase 7 — Twitch Discovery | Complete |
+| TWI-07 | Phase 7 — Twitch Discovery | Complete |

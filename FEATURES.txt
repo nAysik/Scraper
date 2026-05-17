@@ -1,0 +1,163 @@
+YouTube Scraper — Features Overview
+=====================================
+
+Built for indie game marketing teams who need to find and evaluate YouTube
+creators for outreach campaigns. No YouTube Data API key required — uses
+InnerTube (YouTube's internal API) throughout.
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ OUTLIER TRACKER (original feature set)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Channel scraping via keyword search
+  - Enter any keyword and the app searches YouTube for channels publishing
+    content around that topic
+  - Fetches the last 90 days of videos per channel (titles, view counts,
+    publish dates)
+  - Results are upserted into a Supabase database so data accumulates over time
+
+Outlier score calculation
+  - Each video gets an outlier score: views / subscriber_count
+  - Videos scoring below 1x are dropped (underperformers)
+  - High scores surface videos that punched above the channel's typical reach
+
+Niche categorization
+  - Channels are automatically tagged with a gaming niche (Indie, FPS, RPG,
+    Cozy, Survival, Strategy, etc.) using keyword matching
+  - No LLM call required — fast and cost-free
+
+Shorts pipeline
+  - Separate daily sweep searches for viral Shorts (>=1M views, last 7 days)
+    across a configurable keyword list
+  - Shorts are stored with isShort: true so they can be filtered separately
+
+Filterable video dashboard (/dashboard)
+  - Server-side fetch of up to 500 videos, sorted by outlier score descending
+  - Client-side filters: minimum outlier score, maximum subscriber count, niche
+  - No page reload needed — all filtering happens in the browser via TanStack Table
+
+Automation
+  - Vercel cron: hourly channel refresh (50 stale channels per run)
+  - Vercel cron: daily Shorts sweep at 00:00 UTC
+  - GitHub Actions alternative for non-Vercel deployments
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ OUTREACH PIPELINE (v1 milestone)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+All outreach features live under /dashboard/outreach and use a separate
+outreach_channels table — completely independent from the outlier tracker.
+
+--- TAB 1: Discover Channels ---
+
+Keyword-based channel discovery
+  - Type a game name or topic (e.g. "Hades", "cozy games", "indie RPG review")
+  - The app searches YouTube for *videos* matching that keyword, then extracts
+    and deduplicates the unique channels behind those results
+  - Returns creators of all sizes — micro-influencers up to large channels
+
+Channel list with subscriber filter
+  - Results shown in a sortable table (channel name, subscriber count)
+  - Max-subscribers filter to narrow down to the creator size you want
+  - Already-saved channels are badged so you don't re-save duplicates
+
+Save and enrich
+  - Select up to 15 channels and save them in one click
+  - On save, the enrichment pipeline runs automatically (see below)
+  - Enriched data (top games, genre, median views, email) fills in on the row
+
+Show-first / enrich-on-save model
+  - Discover results appear instantly (no wait for enrichment)
+  - Enrichment only runs on channels you explicitly choose to save
+  - Keeps discovery fast even for large keyword sweeps
+
+--- TAB 2: Bulk Enrich ---
+
+Paste-in enrichment
+  - Paste up to 15 YouTube channel URLs (or handles like @channelname) at once
+  - Accepts any URL format: full URL, handle URL, channel ID URL
+  - Processes all channels in a single submission
+
+Per-channel enrichment pipeline
+  1. Canonicalize and resolve the URL to a YouTube channel ID
+  2. Fetch the last 10 video titles and view counts via InnerTube
+  3. Fetch the channel About/description via InnerTube
+  4. Send titles + description to GPT-4o-mini in a single call per channel
+  5. GPT extracts: top 3 games the channel covers + primary gaming genre
+  6. Calculate median view count from the last 10 videos
+  7. Extract business email from the About page description via regex
+  8. Upsert the enriched record into outreach_channels
+
+Progress and results
+  - Spinner shows while enrichment is running
+  - Summary panel on completion: channels processed, any errors, partial saves
+  - Partial save: if the GPT call fails, the channel is saved with null
+    top_games/genre (InnerTube data is never lost)
+  - Re-submitting a URL that already exists updates (upserts) the row
+
+--- TAB 3: Outreach List ---
+
+Full outreach channel table
+  - Displays all saved outreach_channels rows, sorted by last enriched date
+  - Columns: Channel name (clickable link), Subscribers, Top games, Genre,
+    Median views, Last enriched date, Email (clickable mailto link)
+
+Client-side filters
+  - Genre dropdown: populated from the distinct genres in your saved list
+  - Min median views: exclude channels below a view threshold
+  - Max subscribers: exclude channels above a size threshold
+  - All filters update the table instantly with no server round-trip
+
+Re-enrich (per-row)
+  - Click Re-enrich on any row to refresh its enrichment data
+  - Row goes semi-transparent with a spinner while running
+  - Fields update in place on completion — no page reload
+
+Delete (per-row)
+  - Click Delete to immediately remove a channel from the table and the database
+  - Optimistic UI: row disappears instantly, API call runs in background
+  - Row is restored if the API call fails
+
+Bulk delete
+  - Checkboxes in the leftmost column for multi-select
+  - Header checkbox selects all visible (filtered) rows
+  - "Delete N channels" button appears in the toolbar when rows are checked
+  - Single API call handles the entire batch
+
+Export CSV
+  - "Export CSV" button always visible in the toolbar
+  - Exports the currently filtered rows (respects genre / views / subscriber filters)
+  - Columns: Channel name, URL, Subscribers, Top games, Genre, Median views,
+    Last enriched, Email
+  - UTF-8 with BOM — imports cleanly into Notion, Excel, and Google Sheets
+  - Filename: outreach-channels-YYYY-MM-DD.csv
+  - Pure client-side generation — no server call, instant download
+
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ INFRASTRUCTURE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Auth
+  - Email/password login via Supabase Auth
+  - All dashboard routes protected — unauthenticated requests redirect to /login
+  - Session refreshed on every request via @supabase/ssr
+
+Database (Supabase)
+  - channels table: outlier tracker data (scraped channels and videos)
+  - videos table: per-video outlier scores
+  - niches table: 8 default gaming niches with keywords
+  - outreach_channels table: enriched outreach list (youtube_id, name, url,
+    subscriber_count, top_games, genre, median_views, email, last_enriched_at)
+  - RLS policies: authenticated users read all tables; writes via service role only
+
+Tech stack
+  - Next.js 16 (App Router, Server Components, Route Handlers)
+  - Supabase (Postgres + Auth + RLS)
+  - youtubei.js (InnerTube — no YouTube API quota)
+  - OpenAI gpt-4o-mini (game/genre extraction only)
+  - TanStack Table (client-side filtering and sorting)
+  - shadcn/ui + Tailwind CSS (dark mode throughout)
+  - Vercel (hosting + cron) or GitHub Actions (self-hosted cron)
