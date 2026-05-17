@@ -4,12 +4,12 @@ milestone: v2.0
 milestone_name: Coverage & Email Expansion
 status: milestone_complete
 last_updated: "2026-05-17T00:00:00.000Z"
-last_activity: "2026-05-17 — v2.0 milestone complete: multi-keyword sweep, website email enrichment, Twitch discovery (live + clips mode)"
+last_activity: "2026-05-17 — Phase 8 plan 01 complete: chip-input search regression fix + Save all auto-batch for DiscoveryPanel"
 progress:
-  total_phases: 7
-  completed_phases: 7
-  total_plans: 17
-  completed_plans: 17
+  total_phases: 8
+  completed_phases: 8
+  total_plans: 19
+  completed_plans: 19
   percent: 100
 ---
 
@@ -33,12 +33,13 @@ See: .planning/PROJECT.md
 | 5 | Multi-Keyword Sweep | Complete | 2/2 |
 | 6 | Website Email Enrichment | In Progress | 1/1 |
 | 7 | Twitch Discovery | In Progress | 2/3 |
+| 8 | Discovery UX | Complete | 1/1 |
 
 ## Current Position
 
-**Active phase:** 7 — Twitch Discovery (in progress)
-**Active plan:** 07-02 complete
-**Overall progress:** 6/7 phases complete, Phase 7 plan 2/3 done
+**Active phase:** 8 — Discovery UX (complete)
+**Active plan:** 08-01 complete
+**Overall progress:** 8 phases, 08-01 executed
 
 ## Performance Metrics
 
@@ -63,6 +64,9 @@ See: .planning/PROJECT.md
 - platform defaults to 'youtube' in outreach upsert so all existing callers are backward-compatible; composite unique (youtube_id, platform) enables Twitch rows to coexist
 - Twitch token cached module-level with 60s pre-expiry buffer; login stored in youtube_id column with platform='twitch' discriminator
 - Twitch search errors surface as 502 (upstream) not 500 (server) for clearer client-side handling
+- saveBatch extracted as shared helper so both handleSave and handleSaveAll reuse identical fetch + row-update logic without duplication
+- handleSaveAll snapshots eligible rows before the loop to avoid reading stale React state mid-iteration; savedIds tracked locally not via rows state
+- Submit button disabled prop allows pending inputValue as trigger so chip commit is not required before clicking Search
 
 ### Architecture Notes
 
@@ -83,5 +87,5 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-**Last activity:** 2026-05-16 — Phase 7 plan 02 complete: Twitch API library (client.ts, search.ts) + discover-twitch and save-twitch route handlers
-**Next action:** Execute Phase 7 plan 03 (Twitch Discovery UI)
+**Last activity:** 2026-05-17 — Phase 8 plan 01 complete: chip-input search regression fix + Save all auto-batch for DiscoveryPanel
+**Next action:** Phase 7 plan 03 (Twitch Discovery UI) — if still pending
