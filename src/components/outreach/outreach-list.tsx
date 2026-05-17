@@ -51,6 +51,7 @@ export default function OutreachList() {
   const [minMedianViews, setMinMedianViews] = useState<number | null>(null);
   const [maxSubs, setMaxSubs] = useState<number | null>(null);
   const [maxInactiveDays, setMaxInactiveDays] = useState<number | null>(null);
+  const [gamingOnly, setGamingOnly] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'lastEnrichedAt', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [toolbarError, setToolbarError] = useState('');
@@ -92,8 +93,13 @@ export default function OutreachList() {
       const cutoff = Date.now() - maxInactiveDays * 24 * 60 * 60 * 1000;
       if (!r.lastVideoAt || new Date(r.lastVideoAt).getTime() < cutoff) return false;
     }
+    if (gamingOnly && r.platform === 'youtube') {
+      const hasGames = r.topGames && r.topGames.length > 0;
+      const hasGenre = Boolean(r.genre);
+      if (!hasGames && !hasGenre) return false;
+    }
     return true;
-  }), [rows, genreFilter, minMedianViews, maxSubs, maxInactiveDays]);
+  }), [rows, genreFilter, minMedianViews, maxSubs, maxInactiveDays, gamingOnly]);
 
   const handleReenrich = useCallback(async (row: OutreachRow) => {
     setRows(prev => prev.map(r => r.youtubeId === row.youtubeId ? { ...r, status: 'enriching' } : r));
@@ -396,6 +402,14 @@ export default function OutreachList() {
         {maxInactiveDays !== null && (
           <span className="text-xs text-gray-500 whitespace-nowrap">days active</span>
         )}
+
+        <Button
+          variant={gamingOnly ? 'secondary' : 'outline'}
+          size="sm"
+          onClick={() => setGamingOnly(v => !v)}
+        >
+          Gaming only
+        </Button>
 
         <span className="text-sm text-gray-400 ml-auto">
           {filtered.length} channel{filtered.length === 1 ? '' : 's'}
