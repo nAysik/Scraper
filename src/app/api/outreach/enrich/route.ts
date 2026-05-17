@@ -94,6 +94,7 @@ export async function POST(request: NextRequest) {
           email,
           medianViews:     median,
           lastEnrichedAt:  new Date().toISOString(),
+          lastVideoAt:     data.videos[0]?.publishedAt ?? null,
         });
 
         if (extracted) succeeded.push({ url: raw });

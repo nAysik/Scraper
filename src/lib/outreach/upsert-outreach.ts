@@ -26,6 +26,7 @@ export interface OutreachUpsertRow {
   medianViews: number | null;
   lastEnrichedAt: string;   // ISO 8601 timestamp
   platform?: string;        // 'youtube' (default) | 'twitch'
+  lastVideoAt?: Date | null;
 }
 
 export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<void> {
@@ -44,6 +45,7 @@ export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<voi
         median_views:     row.medianViews,
         last_enriched_at: row.lastEnrichedAt,
         platform:         row.platform ?? 'youtube',
+        last_video_at:    row.lastVideoAt ?? null,
       },
       { onConflict: 'youtube_id,platform' },
     );
