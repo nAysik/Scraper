@@ -28,6 +28,7 @@ export interface OutreachChannelData {
   videos: VideoMeta[];
   playlists: PlaylistMeta[];
   websiteEmail: string | null;
+  canRevealEmail: boolean;
 }
 
 // Email extraction (Phase 3 D-12).
@@ -138,6 +139,9 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   if (!description) {
     description = (channel.metadata as any)?.description ?? '';
   }
+
+  // Capture YouTube's can_reveal_email signal — indicates a hidden business email exists.
+  const canRevealEmail: boolean = (about as any)?.can_reveal_email ?? false;
 
   // Website email fallback — parallel fetch of all qualifying social links.
   // Collects every non-social-platform URL from primary_links, fires them all
@@ -272,7 +276,7 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
   // Reuse existing helper (verified src/lib/scraper/shorts.ts line 64).
   const subscriberCount = await getChannelSubscriberCount(channelId);
 
-  return { name, subscriberCount, description, videos, playlists, websiteEmail };
+  return { name, subscriberCount, description, videos, playlists, websiteEmail, canRevealEmail };
 }
 
 export function extractEmail(description: string): string | null {

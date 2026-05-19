@@ -27,6 +27,7 @@ export interface OutreachUpsertRow {
   lastEnrichedAt: string;   // ISO 8601 timestamp
   platform?: string;        // 'youtube' (default) | 'twitch'
   lastVideoAt?: Date | null;
+  hasHiddenEmail?: boolean | null;
 }
 
 export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<void> {
@@ -47,6 +48,7 @@ export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<voi
         last_enriched_at: row.lastEnrichedAt,
         platform:         row.platform ?? 'youtube',
         last_video_at:    row.lastVideoAt ?? null,
+        has_hidden_email: row.hasHiddenEmail ?? null,
       },
       { onConflict: 'youtube_id,platform' },
     );

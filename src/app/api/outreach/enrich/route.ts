@@ -95,6 +95,7 @@ export async function POST(request: NextRequest) {
           medianViews:     median,
           lastEnrichedAt:  new Date().toISOString(),
           lastVideoAt:     data.videos[0]?.publishedAt ?? null,
+          hasHiddenEmail:  data.canRevealEmail,
         });
 
         if (extracted) succeeded.push({ url: raw });
