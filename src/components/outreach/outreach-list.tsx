@@ -34,6 +34,7 @@ interface OutreachRow {
   lastVideoAt: string | null;
   email: string | null;
   platform: string;
+  hasHiddenEmail: boolean | null;
   priorityScore:  number | null;
   priorityReason: string | null;
   status: OutreachRowStatus;
@@ -78,6 +79,7 @@ export default function OutreachList() {
         const list: OutreachRow[] = (data.channels ?? []).map((c: Omit<OutreachRow, 'status'>) => ({
           ...c,
           platform:      (c as OutreachRow).platform      ?? 'youtube',
+          hasHiddenEmail:  (c as OutreachRow).hasHiddenEmail  ?? null,
           priorityScore:  (c as OutreachRow).priorityScore  ?? null,
           priorityReason: (c as OutreachRow).priorityReason ?? null,
           status: 'idle' as OutreachRowStatus,
@@ -248,6 +250,7 @@ export default function OutreachList() {
       const list: OutreachRow[] = (refreshData.channels ?? []).map((c: Omit<OutreachRow, 'status'>) => ({
         ...c,
         platform:      (c as OutreachRow).platform ?? 'youtube',
+        hasHiddenEmail:  (c as OutreachRow).hasHiddenEmail  ?? null,
         priorityScore:  (c as OutreachRow).priorityScore  ?? null,
         priorityReason: (c as OutreachRow).priorityReason ?? null,
         status: 'idle' as OutreachRowStatus,
@@ -447,7 +450,19 @@ export default function OutreachList() {
               >
                 Add email
               </button>
-              {row.original.platform === 'youtube' && (
+              {row.original.platform === 'youtube' && row.original.hasHiddenEmail === true && (
+                <a
+                  href={`${row.original.url}/about`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Hidden business email — open About page and click the reveal button"
+                >
+                  <Badge variant="outline" className="text-purple-400 cursor-pointer text-xs">
+                    Hidden email ↗
+                  </Badge>
+                </a>
+              )}
+              {row.original.platform === 'youtube' && row.original.hasHiddenEmail === null && (
                 <a
                   href={`${row.original.url}/about`}
                   target="_blank"
@@ -458,6 +473,7 @@ export default function OutreachList() {
                   <ExternalLink className="h-3 w-3" />
                 </a>
               )}
+              {/* hasHiddenEmail === false: confirmed no hidden email, no icon shown */}
             </span>
           );
       },
