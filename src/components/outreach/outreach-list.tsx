@@ -531,6 +531,32 @@ export default function OutreachList() {
     URL.revokeObjectURL(url);
   }
 
+  function handleExportNotion() {
+    const notionRows = table.getRowModel().rows.filter(r => r.original.email);
+    const headers = ['channel', 'contact', 'contact method', 'contact person', 'date contacted', 'steam key sent', 'comment'];
+    const escapeCell = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const data = notionRows.map(r => {
+      const o = r.original;
+      return [
+        o.name,
+        o.email ?? '',
+        'Email',
+        '',
+        '',
+        '',
+        '',
+      ].map(escapeCell).join(',');
+    });
+    const csv = [headers.map(escapeCell).join(','), ...data].join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `notion-outreach-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
   const selectedCount = Object.keys(rowSelection).length;
 
   return (
@@ -654,6 +680,11 @@ export default function OutreachList() {
         <Button variant="outline" size="sm" onClick={handleExportCsv}>
           <Download className="h-4 w-4 mr-1" />
           Export CSV
+        </Button>
+
+        <Button variant="outline" size="sm" onClick={handleExportNotion}>
+          <Download className="h-4 w-4 mr-1" />
+          Export for Notion
         </Button>
       </div>
 
