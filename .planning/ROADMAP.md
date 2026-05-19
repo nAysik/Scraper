@@ -18,6 +18,7 @@
 - [ ] **Phase 8: Discovery UX** — Fix chip-input search regression and add auto-batch Save all button for large result sets
 - [ ] **Phase 9: Outreach Prioritizer** — AI relevance scoring (1–10) for saved channels using gpt-4o-mini, sorted by fit for your specific roguelite game
 - [ ] **Phase 10: Notion Export + About Page Shortcut** — Notion-compatible CSV export and About page links for manual email discovery
+- [ ] **Phase 11: Hidden Email Signal** — Capture YouTube's can_reveal_email signal during enrichment; show "Has hidden email" badge in Outreach List for channels with a hidden business email
 
 ---
 
