@@ -140,8 +140,13 @@ async function fetchChannelDataOnce(channelId: string): Promise<OutreachChannelD
     description = (channel.metadata as any)?.description ?? '';
   }
 
-  // Capture YouTube's can_reveal_email signal — indicates a hidden business email exists.
-  const canRevealEmail: boolean = (about as any)?.can_reveal_email ?? false;
+  // Capture YouTube's hidden-email signal.
+  // youtubei.js inverts the raw field: can_reveal_email = !signInForBusinessEmail.
+  // signInForBusinessEmail is PRESENT when the channel HAS a hidden email, so can_reveal_email
+  // is false when the email exists — invert it back. Also handles AboutChannelView shape.
+  const canRevealEmail: boolean =
+    !((about as any)?.can_reveal_email ?? true) ||
+    !!(about as any)?.sign_in_for_business_email;
 
   // Website email fallback — parallel fetch of all qualifying social links.
   // Collects every non-social-platform URL from primary_links, fires them all
