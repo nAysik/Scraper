@@ -18,7 +18,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Download, Trash2, RefreshCw } from 'lucide-react';
+import { Loader2, Download, Trash2, RefreshCw, ExternalLink } from 'lucide-react';
 
 type OutreachRowStatus = 'idle' | 'enriching' | 'partial' | 'failed';
 
@@ -437,13 +437,26 @@ export default function OutreachList() {
             </button>
           )
           : (
-            <button
-              type="button"
-              onClick={() => { setEditingEmailId(id); setEditingEmailVal(''); }}
-              className="text-gray-600 hover:text-gray-400 text-xs italic"
-            >
-              Add email
-            </button>
+            <span className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => { setEditingEmailId(id); setEditingEmailVal(''); }}
+                className="text-gray-600 hover:text-gray-400 text-xs italic"
+              >
+                Add email
+              </button>
+              {row.original.platform === 'youtube' && (
+                <a
+                  href={`${row.original.url}/about`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Open YouTube About page to find email"
+                  className="text-gray-600 hover:text-gray-300"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
+              )}
+            </span>
           );
       },
       enableSorting: false,
