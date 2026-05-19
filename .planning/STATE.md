@@ -3,14 +3,14 @@ gsd_state_version: 1.0
 milestone: v2.0
 milestone_name: Coverage & Email Expansion
 status: milestone_complete
-last_updated: "2026-05-17T17:03:39.425Z"
+last_updated: "2026-05-19T16:25:12.407Z"
 last_activity: "2026-05-17 — Phase 9 plan 01 complete: migration 009 adds priority_score/priority_reason; GET /api/outreach/channels exposes both fields"
 progress:
-  total_phases: 9
+  total_phases: 11
   completed_phases: 8
-  total_plans: 21
-  completed_plans: 20
-  percent: 95
+  total_plans: 26
+  completed_plans: 21
+  percent: 81
 ---
 
 # Project State
@@ -37,9 +37,9 @@ See: .planning/PROJECT.md
 
 ## Current Position
 
-**Active phase:** 9 — Outreach Prioritizer (in progress)
-**Active plan:** 09-01 complete
-**Overall progress:** 9 phases, 09-01 executed
+**Active phase:** 11 — Hidden Email Signal (in progress)
+**Active plan:** 11-01 complete
+**Overall progress:** 11 phases started, 11-01 executed
 
 ## Performance Metrics
 
@@ -69,6 +69,8 @@ See: .planning/PROJECT.md
 - Submit button disabled prop allows pending inputValue as trigger so chip commit is not required before clicking Search
 - Used IF NOT EXISTS guard on ADD COLUMN for idempotent migration (safe to re-run)
 - priority_score and priority_reason are nullable — null means un-scored, not zero
+- has_hidden_email stored as nullable boolean tristate (null=not enriched, true=hidden email, false=no hidden email)
+- has_hidden_email always unconditionally upserted (factual YouTube signal, not user data) unlike email which never overwrites
 
 ### Architecture Notes
 
@@ -89,5 +91,5 @@ See: .planning/PROJECT.md
 
 ## Session Continuity
 
-**Last activity:** 2026-05-17 — Phase 9 plan 01 complete: migration 009 adds priority_score/priority_reason; GET /api/outreach/channels exposes both fields
-**Next action:** Phase 9 plan 02 — priority scoring pipeline (OpenAI integration)
+**Last activity:** 2026-05-19 — Phase 11 plan 01 complete: migration 010 adds has_hidden_email; canRevealEmail captured from InnerTube About metadata; GET /api/outreach/channels exposes hasHiddenEmail
+**Next action:** Phase 11 plan 02 — UI rendering of three-state email cell
