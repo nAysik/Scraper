@@ -17,6 +17,7 @@
 - [x] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge (completed 2026-05-16)
 - [ ] **Phase 8: Discovery UX** — Fix chip-input search regression and add auto-batch Save all button for large result sets
 - [ ] **Phase 9: Outreach Prioritizer** — AI relevance scoring (1–10) for saved channels using gpt-4o-mini, sorted by fit for your specific roguelite game
+- [ ] **Phase 10: Notion Export + About Page Shortcut** — Notion-compatible CSV export and About page links for manual email discovery
 
 ---
 
@@ -131,7 +132,7 @@
 **Requirements:** UX-01, UX-02
 **Success Criteria:**
 1. Typing a keyword and clicking Search (without pressing Enter first) works — the input value is auto-committed as a chip and search fires.
-2. A "Save all" button appears when there are unsaved channels after search. Clicking it saves all eligible rows in sequential batches of 15, showing progress ("Saving batch 2 of 8…"). When all batches complete a summary panel shows total saved/partial/failed.
+2. A "Save all" button appears when there are unsaved channels after search. Clicking it saves all eligible rows in sequential batches of 15, showing progress ("Saving batch 2 of 8..."). When all batches complete a summary panel shows total saved/partial/failed.
 3. Existing per-selection save flow (checkboxes → Save N channels) is unchanged.
 **Plans:** 1 plan
 - [ ] 08-01-PLAN.md — Fix chip-input search regression + auto-batch Save all button
@@ -151,6 +152,18 @@
 - [ ] 09-02-PLAN.md — score-channels.ts GPT scorer + POST /api/outreach/score-all route
 - [ ] 09-03-PLAN.md — Outreach List UI: Score column, badge, tooltip, Score all button + inline form
 
+### Phase 10: Notion Export + About Page Shortcut
+**Goal:** Two improvements: a Notion-compatible CSV export button and an About page shortcut link for manual email discovery.
+**Depends on:** Phase 4 (Outreach List)
+**Requirements:** NOTION-01, REVEAL-01
+**Success Criteria:**
+1. "Export for Notion" button downloads a CSV with 7 columns matching the user's Notion schema (channel, contact, contact method, contact person, date contacted, steam key sent, comment) — email-only rows, respects filters.
+2. YouTube channels with no email show a small external link icon (↗) next to "Add email" that opens their About page — where the user can manually click YouTube's email reveal button.
+**Plans:** 3 plans
+- [ ] 10-01-PLAN.md — Export for Notion button in outreach-list.tsx (UI only, no backend)
+- [ ] 10-02-PLAN.md — InnerTube email reveal in fetch-channel-data.ts + enrich route priority chain update
+- [ ] 10-03-PLAN.md — POST /api/outreach/find-emails route + Find emails button in outreach-list.tsx
+
 ---
 
 ## Progress Table
@@ -166,3 +179,4 @@
 | 7. Twitch Discovery | 3/3 | Complete | 2026-05-17 |
 | 8. Discovery UX | 1/1 | Complete | 2026-05-17 |
 | 9. Outreach Prioritizer | 1/3 | In progress | — |
+| 10. Notion Export + Email Reveal | 0/3 | Planned | — |
