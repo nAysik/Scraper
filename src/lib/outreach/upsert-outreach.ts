@@ -41,7 +41,8 @@ export async function upsertOutreachChannel(row: OutreachUpsertRow): Promise<voi
         subscriber_count: row.subscriberCount,
         top_games:        row.topGames,
         genre:            row.genre,
-        email:            row.email,
+        // Only update email if enrichment found one — never overwrite manually-entered emails with null.
+        ...(row.email !== null ? { email: row.email } : {}),
         median_views:     row.medianViews,
         last_enriched_at: row.lastEnrichedAt,
         platform:         row.platform ?? 'youtube',

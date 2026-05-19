@@ -144,7 +144,8 @@ export default function OutreachList() {
         const patch = e ? {
           topGames:        e.topGames,
           genre:           e.genre,
-          email:           e.email,
+          // Keep manually-entered email if enrichment found nothing
+          email:           e.email ?? r.email,
           subscriberCount: e.subscriberCount ?? r.subscriberCount,
           medianViews:     e.medianViews,
           lastEnrichedAt:  new Date().toISOString(),
@@ -208,7 +209,8 @@ export default function OutreachList() {
           const patch = e ? {
             topGames:        e.topGames,
             genre:           e.genre,
-            email:           e.email,
+            // Keep manually-entered email if enrichment found nothing
+            email:           e.email ?? r.email,
             subscriberCount: e.subscriberCount ?? r.subscriberCount,
             medianViews:     e.medianViews,
             lastEnrichedAt:  new Date().toISOString(),
