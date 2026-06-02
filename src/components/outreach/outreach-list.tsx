@@ -422,6 +422,18 @@ export default function OutreachList() {
         : <span className="text-gray-500">—</span>,
     },
     {
+      accessorKey: 'lastVideoAt',
+      header: 'Last upload',
+      sortingFn: (a, b) => {
+        const av = a.original.lastVideoAt ? new Date(a.original.lastVideoAt).getTime() : -1;
+        const bv = b.original.lastVideoAt ? new Date(b.original.lastVideoAt).getTime() : -1;
+        return av - bv;
+      },
+      cell: ({ row }) => row.original.lastVideoAt
+        ? <span className="text-sm text-gray-300">{new Date(row.original.lastVideoAt).toLocaleDateString()}</span>
+        : <span className="text-gray-500">—</span>,
+    },
+    {
       accessorKey: 'lastEnrichedAt',
       header: 'Last enriched',
       cell: ({ row }) => row.original.lastEnrichedAt
@@ -669,15 +681,12 @@ export default function OutreachList() {
 
         <Input
           type="number"
-          placeholder="e.g. 90"
+          placeholder="Active in last N days"
           min={1}
           value={maxInactiveDays ?? ''}
           onChange={e => setMaxInactiveDays(e.target.value ? Number(e.target.value) : null)}
-          className="w-36 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+          className="w-44 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
         />
-        {maxInactiveDays !== null && (
-          <span className="text-xs text-gray-500 whitespace-nowrap">days active</span>
-        )}
 
         <Button
           variant={gamingOnly ? 'secondary' : 'outline'}
