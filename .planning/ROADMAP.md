@@ -12,13 +12,13 @@
 - [x] **Phase 2: Enrichment Pipeline** — Bulk URL paste → fetch last 10 videos + description → GPT game/genre extraction → upsert
 - [x] **Phase 3: Channel Discovery** — Keyword search → InnerTube channel results → auto-enrich → save selected channels
 - [x] **Phase 4: Outreach Dashboard & Export** — Outreach tab in existing dashboard with filterable table, re-enrich, delete, and CSV export
-- [ ] **Phase 5: Multi-Keyword Sweep** — Replace single keyword input with chip input; search up to 5 keywords in parallel; merge and dedup results
-- [ ] **Phase 6: Website Email Enrichment** — Follow website links from YouTube About page during enrichment to extract additional email addresses
-- [x] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge (completed 2026-05-16)
-- [ ] **Phase 8: Discovery UX** — Fix chip-input search regression and add auto-batch Save all button for large result sets
-- [ ] **Phase 9: Outreach Prioritizer** — AI relevance scoring (1–10) for saved channels using gpt-4o-mini, sorted by fit for your specific roguelite game
-- [ ] **Phase 10: Notion Export + About Page Shortcut** — Notion-compatible CSV export and About page links for manual email discovery
-- [ ] **Phase 11: Hidden Email Signal** — Capture YouTube's can_reveal_email signal during enrichment; show "Has hidden email" badge in Outreach List for channels with a hidden business email
+- [x] **Phase 5: Multi-Keyword Sweep** — Replace single keyword input with chip input; search up to 5 keywords in parallel; merge and dedup results
+- [x] **Phase 6: Website Email Enrichment** — Follow website links from YouTube About page during enrichment to extract additional email addresses
+- [x] **Phase 7: Twitch Discovery** — New Discover on Twitch tab; search live streamers by game; extract emails from bios; save to unified outreach list with platform badge
+- [x] **Phase 8: Discovery UX** — Fix chip-input search regression and add auto-batch Save all button for large result sets
+- [x] **Phase 9: Outreach Prioritizer** — AI relevance scoring (1–10) for saved channels using gpt-4o-mini, sorted by fit for your specific roguelite game
+- [x] **Phase 10: Notion Export + About Page Shortcut** — Notion-compatible CSV export and About page links for manual email discovery
+- [x] **Phase 11: Hidden Email Signal** — Capture YouTube's can_reveal_email signal during enrichment; show "Has hidden email" badge in Outreach List for channels with a hidden business email
 
 ---
 
@@ -165,6 +165,20 @@
 - [ ] 10-02-PLAN.md — InnerTube email reveal in fetch-channel-data.ts + enrich route priority chain update
 - [ ] 10-03-PLAN.md — POST /api/outreach/find-emails route + Find emails button in outreach-list.tsx
 
+### Phase 11: Hidden Email Signal
+**Goal:** Capture YouTube's `can_reveal_email` signal during enrichment and surface it in the Outreach List so the user knows which email-less channels have a hidden business email they can manually reveal (behind YouTube's reCAPTCHA).
+**Depends on:** Phase 2 (enrichment pipeline), Phase 4 (Outreach List)
+**Requirements:** HIDDEN-01, HIDDEN-02, HIDDEN-03, HIDDEN-04, HIDDEN-05, HIDDEN-06, HIDDEN-07
+**Success Criteria:**
+1. Migration 010 adds `has_hidden_email boolean` (nullable, no default) to `outreach_channels`.
+2. During enrichment, `(about as any)?.can_reveal_email` is captured and stored as `has_hidden_email`.
+3. The Outreach List email column shows a purple "Hidden email ↗" badge (linking to About page) when `hasHiddenEmail === true` and no email is stored.
+4. When `hasHiddenEmail === false`, only "Add email" is shown (no icon) — confirmed no hidden email.
+5. When `hasHiddenEmail === null` (existing channels), the existing Phase 10 behaviour is preserved — "Add email" + ExternalLink icon.
+**Plans:** 2 plans
+- [ ] 11-01-PLAN.md — Migration 010 + capture can_reveal_email in enrichment pipeline
+- [ ] 11-02-PLAN.md — Outreach List UI: three-state email cell with Hidden email badge
+
 ---
 
 ## Progress Table
@@ -181,3 +195,4 @@
 | 8. Discovery UX | 1/1 | Complete | 2026-05-17 |
 | 9. Outreach Prioritizer | 1/3 | In progress | — |
 | 10. Notion Export + Email Reveal | 0/3 | Planned | — |
+| 11. Hidden Email Signal | 0/2 | Planned | — |
