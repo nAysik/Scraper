@@ -35,6 +35,7 @@ interface OutreachRow {
   email: string | null;
   platform: string;
   hasHiddenEmail: boolean | null;
+  contacted:      boolean;
   priorityScore:  number | null;
   priorityReason: string | null;
   status: OutreachRowStatus;
@@ -56,6 +57,7 @@ export default function OutreachList() {
   const [maxSubs, setMaxSubs] = useState<number | null>(null);
   const [maxInactiveDays, setMaxInactiveDays] = useState<number | null>(null);
   const [gamingOnly, setGamingOnly] = useState(false);
+  const [hideContacted, setHideContacted] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([{ id: 'lastEnrichedAt', desc: true }]);
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({});
   const [toolbarError, setToolbarError] = useState('');
@@ -81,6 +83,7 @@ export default function OutreachList() {
           ...c,
           platform:      (c as OutreachRow).platform      ?? 'youtube',
           hasHiddenEmail:  (c as OutreachRow).hasHiddenEmail  ?? null,
+          contacted:       (c as OutreachRow).contacted ?? false,
           priorityScore:  (c as OutreachRow).priorityScore  ?? null,
           priorityReason: (c as OutreachRow).priorityReason ?? null,
           status: 'idle' as OutreachRowStatus,
@@ -110,6 +113,7 @@ export default function OutreachList() {
       const cutoff = Date.now() - maxInactiveDays * 24 * 60 * 60 * 1000;
       if (!r.lastVideoAt || new Date(r.lastVideoAt).getTime() < cutoff) return false;
     }
+    if (hideContacted && r.contacted) return false;
     if (gamingOnly && r.platform === 'youtube') {
       // 'Other' = GPT's fallback when channel has no clear gaming category → treat as non-gaming
       if (r.genre === 'Other') return false;
@@ -118,7 +122,7 @@ export default function OutreachList() {
       if (!r.genre && !hasGames) return false;
     }
     return true;
-  }), [rows, genreFilter, minMedianViews, minSubs, maxSubs, maxInactiveDays, gamingOnly]);
+  }), [rows, genreFilter, minMedianViews, minSubs, maxSubs, maxInactiveDays, gamingOnly, hideContacted]);
 
   const handleReenrich = useCallback(async (row: OutreachRow) => {
     setRows(prev => prev.map(r => r.youtubeId === row.youtubeId ? { ...r, status: 'enriching' } : r));
@@ -323,6 +327,30 @@ export default function OutreachList() {
           checked={row.getIsSelected()}
           disabled={row.original.status === 'enriching'}
           onChange={row.getToggleSelectedHandler()}
+        />
+      ),
+      enableSorting: false,
+    },
+    {
+      id: 'contacted',
+      header: 'Contacted',
+      cell: ({ row }) => (
+        <input
+          type="checkbox"
+          checked={row.original.contacted}
+          aria-label={`Mark ${row.original.name} as contacted`}
+          onChange={async (e) => {
+            const val = e.target.checked;
+            setRows(prev => prev.map(r =>
+              r.youtubeId === row.original.youtubeId ? { ...r, contacted: val } : r
+            ));
+            await fetch(`/api/outreach/channels/${encodeURIComponent(row.original.youtubeId)}`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ contacted: val }),
+            });
+          }}
+          className="w-4 h-4 cursor-pointer"
         />
       ),
       enableSorting: false,
@@ -657,6 +685,14 @@ export default function OutreachList() {
           onClick={() => setGamingOnly(v => !v)}
         >
           Gaming only
+        </Button>
+
+        <Button
+          variant={hideContacted ? 'secondary' : 'outline'}
+          size="sm"
+          onClick={() => setHideContacted(v => !v)}
+        >
+          Hide contacted
         </Button>
 
         {/* Score all inline form */}

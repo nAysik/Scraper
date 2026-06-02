@@ -12,15 +12,20 @@ export async function PATCH(
   const { youtubeId } = await params;
   const body = await request.json().catch(() => ({}));
   const email: string | null = typeof body.email === 'string' ? body.email.trim() || null : null;
+  const contacted: boolean | undefined = typeof body.contacted === 'boolean' ? body.contacted : undefined;
+
+  const update: Record<string, unknown> = {};
+  if (email !== null || typeof body.email === 'string') update.email = email;
+  if (contacted !== undefined) update.contacted = contacted;
 
   const service = createServiceClient();
   const { error } = await service
     .from('outreach_channels')
-    .update({ email })
+    .update(update)
     .eq('youtube_id', youtubeId);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ email });
+  return NextResponse.json({ email, contacted });
 }
 
 export async function DELETE(

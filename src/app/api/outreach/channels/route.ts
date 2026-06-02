@@ -8,7 +8,7 @@ export async function GET() {
 
   const { data, error } = await supabase
     .from('outreach_channels')
-    .select('youtube_id, name, url, subscriber_count, top_games, genre, median_views, last_enriched_at, last_video_at, email, platform, priority_score, priority_reason, has_hidden_email')
+    .select('youtube_id, name, url, subscriber_count, top_games, genre, median_views, last_enriched_at, last_video_at, email, platform, priority_score, priority_reason, has_hidden_email, contacted')
     .order('last_enriched_at', { ascending: false, nullsFirst: false });
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
@@ -28,6 +28,7 @@ export async function GET() {
     priorityScore:   c.priority_score  ?? null,
     priorityReason:  c.priority_reason  ?? null,
     hasHiddenEmail:  c.has_hidden_email  ?? null,
+    contacted:       c.contacted ?? false,
   }));
 
   return NextResponse.json({ channels });
