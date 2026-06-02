@@ -52,6 +52,7 @@ export default function OutreachList() {
   const [loadError, setLoadError] = useState('');
   const [genreFilter, setGenreFilter] = useState('');
   const [minMedianViews, setMinMedianViews] = useState<number | null>(null);
+  const [minSubs, setMinSubs] = useState<number | null>(null);
   const [maxSubs, setMaxSubs] = useState<number | null>(null);
   const [maxInactiveDays, setMaxInactiveDays] = useState<number | null>(null);
   const [gamingOnly, setGamingOnly] = useState(false);
@@ -103,6 +104,7 @@ export default function OutreachList() {
   const filtered = useMemo(() => rows.filter(r => {
     if (genreFilter && r.genre !== genreFilter) return false;
     if (minMedianViews !== null && (r.medianViews === null || r.medianViews < minMedianViews)) return false;
+    if (minSubs !== null && minSubs > 0 && (r.subscriberCount === null || r.subscriberCount < minSubs)) return false;
     if (maxSubs !== null && maxSubs > 0 && r.subscriberCount !== null && r.subscriberCount > maxSubs) return false;
     if (maxInactiveDays !== null) {
       const cutoff = Date.now() - maxInactiveDays * 24 * 60 * 60 * 1000;
@@ -116,7 +118,7 @@ export default function OutreachList() {
       if (!r.genre && !hasGames) return false;
     }
     return true;
-  }), [rows, genreFilter, minMedianViews, maxSubs, maxInactiveDays, gamingOnly]);
+  }), [rows, genreFilter, minMedianViews, minSubs, maxSubs, maxInactiveDays, gamingOnly]);
 
   const handleReenrich = useCallback(async (row: OutreachRow) => {
     setRows(prev => prev.map(r => r.youtubeId === row.youtubeId ? { ...r, status: 'enriching' } : r));
@@ -615,6 +617,16 @@ export default function OutreachList() {
           value={minMedianViews ?? ''}
           onChange={e => setMinMedianViews(e.target.value ? Number(e.target.value) : null)}
           className="w-40 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
+        />
+
+        {/* Min subscribers */}
+        <Input
+          type="number"
+          placeholder="Min subscribers"
+          min={0}
+          value={minSubs ?? ''}
+          onChange={e => setMinSubs(e.target.value ? Number(e.target.value) : null)}
+          className="w-36 bg-gray-900 border-gray-700 text-white placeholder:text-gray-500"
         />
 
         {/* Max subscribers */}
