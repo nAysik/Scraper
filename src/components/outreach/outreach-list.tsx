@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   getSortedRowModel,
   getFilteredRowModel,
+  getPaginationRowModel,
   flexRender,
   type ColumnDef,
   type SortingState,
@@ -570,10 +571,14 @@ export default function OutreachList() {
     onSortingChange: setSorting,
     onRowSelectionChange: setRowSelection,
     enableRowSelection: (row) => row.original.status !== 'enriching',
+    enableColumnResizing: true,
+    columnResizeMode: 'onChange',
     getRowId: (row) => row.youtubeId,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    initialState: { pagination: { pageSize: 50 } },
   });
 
   // Declared AFTER `table` so it can reference table.getRowModel()
@@ -789,6 +794,7 @@ export default function OutreachList() {
 
       {/* Table */}
       {!loading && (
+        <>
         <div className="rounded-md border border-gray-800 overflow-hidden">
           <Table>
             <TableHeader>
@@ -797,12 +803,20 @@ export default function OutreachList() {
                   {hg.headers.map(header => (
                     <TableHead
                       key={header.id}
-                      className="text-gray-400 text-xs"
+                      className="text-gray-400 text-xs relative select-none"
                       onClick={header.column.getToggleSortingHandler()}
-                      style={{ cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
+                      style={{ width: header.getSize(), cursor: header.column.getCanSort() ? 'pointer' : 'default' }}
                     >
                       {flexRender(header.column.columnDef.header, header.getContext())}
                       {header.column.getIsSorted() === 'asc' ? ' ↑' : header.column.getIsSorted() === 'desc' ? ' ↓' : ''}
+                      {header.column.getCanResize() && (
+                        <div
+                          onMouseDown={header.getResizeHandler()}
+                          onTouchStart={header.getResizeHandler()}
+                          onClick={e => e.stopPropagation()}
+                          className="absolute right-0 top-0 h-full w-1 cursor-col-resize bg-gray-700 opacity-0 hover:opacity-100 active:opacity-100"
+                        />
+                      )}
                     </TableHead>
                   ))}
                 </TableRow>
@@ -844,6 +858,17 @@ export default function OutreachList() {
             </TableBody>
           </Table>
         </div>
+
+        {table.getPageCount() > 1 && (
+          <div className="flex items-center justify-between text-sm text-gray-400">
+            <span>{filtered.length} channels · page {table.getState().pagination.pageIndex + 1} of {table.getPageCount()}</span>
+            <div className="flex gap-2">
+              <Button size="sm" variant="outline" onClick={() => table.previousPage()} disabled={!table.getCanPreviousPage()}>← Prev</Button>
+              <Button size="sm" variant="outline" onClick={() => table.nextPage()} disabled={!table.getCanNextPage()}>Next →</Button>
+            </div>
+          </div>
+        )}
+        </>
       )}
     </div>
   );
